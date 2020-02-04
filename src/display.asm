@@ -4,7 +4,11 @@ INCLUDE "hardware.inc"
 ; project libs
 INCLUDE "kernel.inc"
 
-SECTION "Display Data", WRAM0[$C000]
+SECTION "Display HRAM Data", HRAM[$FF80]
+; the built-in DMA transfer locks up ROM, and so needs putting in HRAM
+Display_DmaTransfer:
+
+SECTION "Display WRAM Data", WRAM0[$C000]
 ; OAM_BUFFER needs to be aligned with $XX00 as the	built-in DMA reads from
 ; there to $XX9F
 OAM_BUFFER: ds 4 * 40
@@ -16,9 +20,11 @@ INCBIN "hero.2bpp"
 HERO_SHEET_END:
 HERO_SHEET_SIZE EQU HERO_SHEET_END-HERO_SHEET
 
+; Constants
 BGP_DEFAULT EQU %11100100
 OBP0_DEFAULT EQU %11010000
 
+; Methods
 Display_Init::
 .wait
 	; wait until V-Blank period to turn off the LCDC
@@ -47,6 +53,9 @@ Display_Init::
 	ld [rSCX], a
 	ld [rSCY], a
 
+	; Put the Display_DmaTransfer routine in to HRAM
+	MEMCPY Display_DmaTransfer, Display_DmaTransferStart, Display_DmaTransferEnd - Display_DmaTransferStart
+
 	; copy HERO_SHEET in to tiles
 	MEMCPY _VRAM, HERO_SHEET, HERO_SHEET_SIZE
 
@@ -54,7 +63,7 @@ Display_Init::
 
 DMA_DELAY EQU $28
 
-Display_DmaTransfer:
+Display_DmaTransferStart:
 ; this is the routine that transfers from OAM_BUFFER to the OAM in VRAM
 	; trigger DMA transfer
 	ld a, HIGH(OAM_BUFFER)

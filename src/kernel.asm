@@ -2,11 +2,12 @@ INCLUDE "hardware.inc"
 
 INCLUDE "kernel.inc"
 
-SECTION "Kernel WRAM", WRAM0
+SECTION "Kernel WRAM Data", WRAM0
 
 Kernel_ConsoleVersion:: ds 1
 Kernel_WaitingForVblank: ds 1
 Kernel_Method: ds 2
+
 
 SECTION "Kernel ROM0", ROM0
 
