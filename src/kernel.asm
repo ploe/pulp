@@ -16,18 +16,18 @@ Kernel_MemCpy::
 ; de source
 ; hl destination
 .next_byte\@
-  ; fetch what we have in source and copy it into destination
+	; fetch what we have in source and copy it into destination
 	ld a, [de]
 	ld [hli], a
 	inc de
 	dec bc
 
-  ; loop until num is 0
+	; loop until num is 0
 	ld a, b
 	or c
 	jr nz, .next_byte\@
 
-  ret
+	ret
 
 Kernel_MemSet::
 ; for amount of bytes in size at destination set them to the value of value
@@ -35,37 +35,37 @@ Kernel_MemSet::
 ; d value
 ; bc size
 .next_byte\@
-  ; fetch what we have in value and set it in destination
-  ld a, d
-  ld [hli], a
-  dec bc
+	; fetch what we have in value and set it in destination
+	ld a, d
+	ld [hli], a
+	dec bc
 
-  ; loop until size is 0
-  ld a, b
-  or c
-  jr nz, .next_byte\@
+	; loop until size is 0
+	ld a, b
+	or c
+	jr nz, .next_byte\@
 
-  ret
+	ret
 
 Sound_Init::
-  ; turn off the sound
-  xor a
-  ld [rNR52], a
+	; turn off the sound
+	xor a
+	ld [rNR52], a
 
-  ret
+	ret
 
 Kernel_Init::
 ; entrypoint passes to Kernel_Start to set the system up for use
 
-  ; first value in register a is the sort of Game Boy we're running on
-  ld [Kernel_ConsoleVersion], a
+	; first value in register a is the sort of Game Boy we're running on
+	ld [Kernel_ConsoleVersion], a
 
-  ; wipe RAM
-  MEMSET _RAM, 0, $DFFF-$C000
+	; wipe RAM
+	MEMSET _RAM, 0, $DFFF-$C000
 
-  ; set-up each of the hardware subsystems
-  call Display_Init
-  call Sound_Init
+	; set-up each of the hardware subsystems
+	call Display_Init
+	call Sound_Init
 
 Kernel_Main::
 ; main heartbeat of the program, waits for the vblank interrupt and kicks off
@@ -73,23 +73,23 @@ Kernel_Main::
 .wait
 	halt
 
-  ; was it a v-blank interrupt?
+	; was it a v-blank interrupt?
 	ld a, [Kernel_WaitingForVblank]
 	and a
 	jr nz, .wait
 
-  ; set v-blank to wait again
+	; set v-blank to wait again
 	ld a, 1
 	ld [Kernel_WaitingForVblank], a
 
-  ; call Kernel_Method
+	; call Kernel_Method
 
-  ; and around we go again...
+	; and around we go again...
 	jp Kernel_Main
 
 SECTION "Kernel V-Blank Interrupt", ROM0[$40]
-  ; stop waiting for v-blank
-  xor a
-  ld [Kernel_WaitingForVblank], a
+	; stop waiting for v-blank
+	xor a
+	ld [Kernel_WaitingForVblank], a
 
-  reti
+	reti

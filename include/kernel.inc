@@ -1,4 +1,4 @@
-  IF !DEF(KERNEL_INC)
+	IF !DEF(KERNEL_INC)
 KERNEL_INC SET 1
 
 ; Constants
@@ -8,41 +8,41 @@ CONSOLE_CGB EQU $11
 
 ; Macros
 MEMCPY: MACRO
-  ; copies num number of bytes from source to destination
-  ; sets up the registers and calls Kernel_MemCpy
-  push bc
-  push de
-  push hl
+	; copies num number of bytes from source to destination
+	; sets up the registers and calls Kernel_MemCpy
+	push bc
+	push de
+	push hl
 
 	ld hl, \1 ; destination
 	ld de, \2 ; source
 	ld bc, \3 ; num
 
-  call Kernel_MemCpy
+	call Kernel_MemCpy
 
-  pop hl
-  pop de
-  pop bc
+	pop hl
+	pop de
+	pop bc
 
-  ENDM
+	ENDM
 
 MEMSET: MACRO
-  ; for amount of bytes in size at destination set them to the value of value
-  ; calls Kernel_MemSet
-  push bc
-  push de
-  push hl
+	; for amount of bytes in size at destination set them to the value of value
+	; calls Kernel_MemSet
+	push bc
+	push de
+	push hl
 
-  ld hl, \1 ; destination
-  ld d, \2  ; value
-  ld bc, \3 ; size
+	ld hl, \1 ; destination
+	ld d, \2	; value
+	ld bc, \3 ; size
 
-  call Kernel_MemSet
+	call Kernel_MemSet
 
-  pop hl
-  pop de
-  pop bc
+	pop hl
+	pop de
+	pop bc
 
-  ENDM
+	ENDM
 
 ENDC
