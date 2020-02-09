@@ -5,11 +5,10 @@ INCLUDE "kernel.inc"
 SECTION "Kernel WRAM Data", WRAM0
 Kernel_ConsoleVersion:: db
 Kernel_WaitingForVblank: db
-Kernel_Method: dw
-Kernel_ProcessTop: dw
-Kernel_ProcessThis: dw
-Kernel_ProcessCursor: dw
-Kernel_ProcessSpace:
+
+
+Process_Top: dw
+;Process_This: dw
 
 SECTION "Kernel ROM0", ROM0
 
@@ -18,37 +17,65 @@ Process_Code RW 1
 ; Process_Pid
 ; Process_Bank RB 1
 Process_Next RW 1
-Process_Data RB 0
 PROCESS_SIZE RB 0
 
-SPAWN: MACRO
-	; this = cursor
-	; this->next = top
-	; cursor += size
-	; init(this)
+Process_Space EQU $E000
 
-	; put the value of Cursor
-	ld hl, Kernel_ProcessCursor
+SPAWN: MACRO
+	; put the value of Top in HL
+	ld hl, Process_Top
 	ld b, [hl]
 	inc hl
 	ld c, [hl]
-	ld l, c
-	ld h, b
-
-	ld bc, 10 ; example size
-
-	; C += L
+	ld a, b
+	ld h, a
 	ld a, c
-	add a, l
+	ld l, a
+
+	; set BC with size of the data buffer
+	xor a
+	ld b, a
+	ld a, \2 + PROCESS_SIZE
 	ld c, a
 
-	; B += H with the Carry Flag
-	ld a, b
-	adc a, h
-	ld b, a
+	; Subtract word in HL from BC
+	ld a, l
+	sub a, c
+	ld l, a
+	ld a, h
+	sbc a, b
+	ld h, a
 
-	; cursor += size
-	ld hl, Kernel_ProcessCursor
+	; push a pointer to the new Top
+	push hl
+
+	; Set the Code member in the Process to init
+	ld bc, \1 ; init
+	ld [hl], b
+	inc hl
+	ld [hl], c
+	inc hl
+
+	; push pointer to Next member
+	push hl
+
+	; Load BC with Top
+	ld hl, Process_Top
+	ld b, [hl]
+	inc hl
+	ld c, [hl]
+
+	; pop Pointer to Next member
+	pop hl
+
+	; Set Next member to current Top
+	ld [hl], b
+	inc hl
+	ld [hl], c
+
+	; Get the new Top and set it
+	pop bc
+	ld hl, Process_Top
 	ld [hl], b
 	inc hl
 	ld [hl], c
@@ -60,7 +87,7 @@ Kernel_MemCpy::
 ; bc num
 ; de source
 ; hl destination
-.next_byte\@
+.next_byte
 	; fetch what we have in source and copy it into destination
 	ld a, [de]
 	ld [hli], a
@@ -70,7 +97,7 @@ Kernel_MemCpy::
 	; loop until num is 0
 	ld a, b
 	or c
-	jr nz, .next_byte\@
+	jr nz, .next_byte
 
 	ret
 
@@ -79,7 +106,7 @@ Kernel_MemSet::
 ; hl destination
 ; d value
 ; bc size
-.next_byte\@
+.next_byte
 	; fetch what we have in value and set it in destination
 	ld a, d
 	ld [hli], a
@@ -88,7 +115,7 @@ Kernel_MemSet::
 	; loop until size is 0
 	ld a, b
 	or c
-	jr nz, .next_byte\@
+	jr nz, .next_byte
 
 	ret
 
@@ -106,32 +133,20 @@ Kernel_Init::
 	ld [Kernel_ConsoleVersion], a
 
 	; wipe RAM
-	MEMSET _RAM, 0, $DFFF-$C000
+	MEMSET _RAM, 0, $E000-$C000
 
-	; Set the Cursor to the start of ProcessSpace
-	ld hl, Kernel_ProcessCursor
-	ld bc, Kernel_ProcessSpace
-	ld [hl], b
-	inc hl
-	ld [hl], c
-
-	; Put the value of Cursor in BC
-	ld hl, Kernel_ProcessCursor
-	ld b,	[hl]
-	inc hl
-	ld c, [hl]
-
-	; Put the value of BC (cursor) in Kernel_ProcessThis
-	ld hl, Kernel_ProcessThis
+	; Set the Top to the start of ProcessSpace
+	ld hl, Process_Top
+	ld bc, Process_Space
 	ld [hl], b
 	inc hl
 	ld [hl], c
 
 
-	SPAWN
-	SPAWN
-	;SPAWN
-	;SPAWN
+	SPAWN $F13B, 1
+	SPAWN $8888, 1
+	SPAWN $1313, 10
+	SPAWN $F035, 15
 	;SPAWN
 	;SPAWN
 	;SPAWN
