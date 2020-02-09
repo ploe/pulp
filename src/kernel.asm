@@ -21,6 +21,26 @@ PROCESS_SIZE RB 0
 
 Process_Space EQU $E000
 
+Kernel_Subw::
+	pop de ; SP
+	pop bc ; subtrahend
+	pop hl ; minuend
+
+	; Subtract word in BC from HL
+	ld a, l
+	sub a, c
+	ld l, a
+	ld a, h
+	sbc a, b
+	ld h, a
+
+	; push return value to stack
+	push hl
+
+	; return
+	push de
+	ret
+
 SPAWN: MACRO
 	; put the value of Top in HL
 	ld hl, Process_Top
@@ -38,13 +58,9 @@ SPAWN: MACRO
 	ld a, \2 + PROCESS_SIZE
 	ld c, a
 
-	; Subtract word in HL from BC
-	ld a, l
-	sub a, c
-	ld l, a
-	ld a, h
-	sbc a, b
-	ld h, a
+	push hl
+	push bc
+	call Kernel_Subw
 
 	; push a pointer to the new Top
 	push hl
