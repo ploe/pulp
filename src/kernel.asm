@@ -21,7 +21,7 @@ PROCESS_SIZE RB 0
 
 Process_Space EQU $E000
 
-Kernel_Subw::
+Kernel_SubW::
 	pop de ; SP
 	pop bc ; subtrahend
 	pop hl ; minuend
@@ -41,62 +41,99 @@ Kernel_Subw::
 	push de
 	ret
 
-SPAWN: MACRO
-	; put the value of Top in HL
-	ld hl, Process_Top
+Kernel_PeekW::
+	; Gets the value from source and pushes it to the stack
+	pop de ; SP
+	pop hl ; source
+
 	ld b, [hl]
 	inc hl
 	ld c, [hl]
-	ld a, b
-	ld h, a
-	ld a, c
-	ld l, a
 
-	; set BC with size of the data buffer
-	xor a
-	ld b, a
-	ld a, \2 + PROCESS_SIZE
-	ld c, a
+	push bc
 
+	push de
+	ret
+
+Process_Alloc::
+	; push a pointer to Top to the stack
+	ld hl, Process_Top
+	push hl ; Top address for PokeW
+
+	; push the value in Top to the stack
+	call Kernel_PeekW
+
+	; reorganise the stack so the values are in the right order
+	pop hl ; Top value
+	pop de ; SP
+	pop bc ; Size
+
+	push de
 	push hl
 	push bc
-	call Kernel_Subw
 
-	; push a pointer to the new Top
+	; push new Top to stack
+	call Kernel_SubW
+	pop bc
+
+	; push Top address to stack
+	ld hl, Process_Top
 	push hl
 
-	; Set the Code member in the Process to init
-	ld bc, \1 ; init
+	; push new Top value to stack
+	push bc
+
+	; set Top to new Top and ignore return value
+	call Kernel_PokeW
+	pop hl ; discard the return value
+
+	ret
+
+Kernel_PokeW::
+	; Sets destination to value and push the next address to the stack
+	pop de ; SP
+	pop bc ; value
+	pop hl ; destination
+
 	ld [hl], b
 	inc hl
 	ld [hl], c
 	inc hl
 
-	; push pointer to Next member
 	push hl
 
-	; Load BC with Top
-	ld hl, Process_Top
-	ld b, [hl]
-	inc hl
-	ld c, [hl]
+	push de
+	ret
 
-	; pop Pointer to Next member
-	pop hl
+
+	;ENDM
+
+	; push new Top to stack, twice
+
+	; set Code to init method and push pointer to Next member to stack
+;	push de
+;	call Kernel_PokeW
+;	pop hl
+;	pop de
+;	push hl
+
+	; push address of Process_Top to stack
+;	ld hl, Process_Top
+;	push hl
 
 	; Set Next member to current Top
-	ld [hl], b
-	inc hl
-	ld [hl], c
+;	push de
+;	call Kernel_PokeW
+;	inc sp	; discard value most recent on stack
+;	pop de
 
 	; Get the new Top and set it
-	pop bc
-	ld hl, Process_Top
-	ld [hl], b
-	inc hl
-	ld [hl], c
+;	push de
+;	call Kernel_PokeW
+;	inc sp
+;	pop de
 
-	ENDM
+;	ENDM
 
 Kernel_MemCpy::
 ; copies num number of bytes from source to destination
@@ -153,16 +190,26 @@ Kernel_Init::
 
 	; Set the Top to the start of ProcessSpace
 	ld hl, Process_Top
-	ld bc, Process_Space
-	ld [hl], b
-	inc hl
-	ld [hl], c
+	push hl
+	ld hl, Process_Space
+	push hl
+	call Kernel_PokeW
+	pop hl ; discard hl
+	;ld [hl], b
+	;inc hl
+	;ld [hl], c
 
+	ld hl, 10
+	push hl
+	call Process_Alloc
 
-	SPAWN $F13B, 1
-	SPAWN $8888, 1
-	SPAWN $1313, 10
-	SPAWN $F035, 15
+	ld hl, 15
+	push hl
+	call Process_Alloc
+
+	;SPAWN $8888, 1
+	;SPAWN $1313, 10
+	;SPAWN $F035, 15
 	;SPAWN
 	;SPAWN
 	;SPAWN
@@ -171,7 +218,7 @@ Kernel_Init::
 	call Display_Init
 	call Sound_Init
 
-	;ret
+	jp Kernel_Main
 
 Kernel_Main::
 ; main heartbeat of the program, waits for the vblank interrupt and kicks off
