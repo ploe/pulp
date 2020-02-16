@@ -21,10 +21,22 @@ PROCESS_SIZE RB 0
 
 Process_Space EQU $E000
 
+SUBW: MACRO
+	; Subtract words subtrahend from minuend
+	; \1 -> minuend
+	; \2 -> subtrahend
+	; result -> hl
+	ld hl, \1
+	ld bc, \2
+	call Kernel_SubW
+
+	ENDM
+
 Kernel_SubW::
-	pop de ; SP
-	pop bc ; subtrahend
-	pop hl ; minuend
+	; Subtract words subtrahend from minuend
+	; bc -> subtrahend
+	; hl -> minuend
+	; result -> hl
 
 	; Subtract word in BC from HL
 	ld a, l
@@ -34,11 +46,6 @@ Kernel_SubW::
 	sbc a, b
 	ld h, a
 
-	; push return value to stack
-	push hl
-
-	; return
-	push de
 	ret
 
 Kernel_PeekW::
@@ -65,15 +72,16 @@ Process_Alloc::
 
 	; reorganise the stack so the values are in the right order
 	pop hl ; Top value
-	pop de ; SP
+	pop de ; PC
 	pop bc ; Size
 
 	push de
-	push hl
-	push bc
 
 	; push new Top to stack
+
 	call Kernel_SubW
+
+	push hl
 	pop bc
 
 	; push Top address to stack
