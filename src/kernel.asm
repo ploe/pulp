@@ -50,28 +50,28 @@ Kernel_SubW::
 
 Kernel_PeekW::
 	; Gets the value from source and pushes it to the stack
-	pop de ; SP
-	pop hl ; source
+	; destination <~ hl
+	; value ~> bc
+	; next ~> hl
 
 	ld b, [hl]
 	inc hl
 	ld c, [hl]
+	inc hl
 
-	push bc
-
-	push de
 	ret
 
 Process_Alloc::
 	; push a pointer to Top to the stack
 	ld hl, Process_Top
-	push hl ; Top address for PokeW
 
 	; push the value in Top to the stack
 	call Kernel_PeekW
+	ld h, b
+	ld l, c
 
 	; reorganise the stack so the values are in the right order
-	pop hl ; Top value
+	;pop hl
 	pop de ; PC
 	pop bc ; Size
 
