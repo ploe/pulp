@@ -62,86 +62,43 @@ Kernel_PeekW::
 	ret
 
 Process_Alloc::
-	; push a pointer to Top to the stack
+	; Put the value of Top in HL
 	ld hl, Process_Top
-
-	; push the value in Top to the stack
 	call Kernel_PeekW
 	ld h, b
 	ld l, c
 
 	; reorganise the stack so the values are in the right order
-	;pop hl
 	pop de ; PC
 	pop bc ; Size
-
 	push de
 
-	; push new Top to stack
-
+	; Put new Top in BC
 	call Kernel_SubW
-
-	push hl
-	pop bc
+	ld b, h
+	ld c, l
 
 	; push Top address to stack
 	ld hl, Process_Top
-	push hl
 
 	; push new Top value to stack
-	push bc
 
 	; set Top to new Top and ignore return value
 	call Kernel_PokeW
-	pop hl ; discard the return value
 
 	ret
 
 Kernel_PokeW::
 	; Sets destination to value and push the next address to the stack
-	pop de ; SP
-	pop bc ; value
-	pop hl ; destination
-
+	; destination <~ hl
+	; value <~ bc
+	; next -> hl
 	ld [hl], b
 	inc hl
 	ld [hl], c
 	inc hl
 
-	push hl
-
-	push de
 	ret
-
-
-	;ENDM
-
-	; push new Top to stack, twice
-
-	; set Code to init method and push pointer to Next member to stack
-;	push de
-;	call Kernel_PokeW
-;	pop hl
-;	pop de
-;	push hl
-
-	; push address of Process_Top to stack
-;	ld hl, Process_Top
-;	push hl
-
-	; Set Next member to current Top
-;	push de
-;	call Kernel_PokeW
-;	inc sp	; discard value most recent on stack
-;	pop de
-
-	; Get the new Top and set it
-;	push de
-;	call Kernel_PokeW
-;	inc sp
-;	pop de
-
-;	ENDM
 
 Kernel_MemCpy::
 ; copies num number of bytes from source to destination
@@ -198,14 +155,8 @@ Kernel_Init::
 
 	; Set the Top to the start of ProcessSpace
 	ld hl, Process_Top
-	push hl
-	ld hl, Process_Space
-	push hl
+	ld bc, Process_Space
 	call Kernel_PokeW
-	pop hl ; discard hl
-	;ld [hl], b
-	;inc hl
-	;ld [hl], c
 
 	ld hl, 10
 	push hl
