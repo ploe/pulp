@@ -62,28 +62,38 @@ Kernel_PeekW::
 	ret
 
 Process_Alloc::
-	; Put the value of Top in HL
+	; cache Size in DE
+	ld d, h
+	ld e, l
+
+	; Put the value of Top in HL and push to the stack
 	ld hl, Process_Top
 	call Kernel_PeekW
+	push bc
 	ld h, b
 	ld l, c
 
-	; reorganise the stack so the values are in the right order
-	pop de ; PC
-	pop bc ; Size
-	push de
+	; grab Size in BC
+	ld b, d
+	ld c, e
 
 	; Put new Top in BC
 	call Kernel_SubW
 	ld b, h
 	ld c, l
 
-	; push Top address to stack
+	; set Top to new Top
 	ld hl, Process_Top
+	call Kernel_PokeW
 
-	; push new Top value to stack
+	; Get the address of Next in the new Top
+	ld h, b
+	ld l, c
+	ld bc, Process_Next
+	add hl, bc
 
-	; set Top to new Top and ignore return value
+	; Load the old Top in to the new Top's next
+	pop bc
 	call Kernel_PokeW
 
 	ret
@@ -159,19 +169,10 @@ Kernel_Init::
 	call Kernel_PokeW
 
 	ld hl, 10
-	push hl
 	call Process_Alloc
 
 	ld hl, 15
-	push hl
 	call Process_Alloc
-
-	;SPAWN $8888, 1
-	;SPAWN $1313, 10
-	;SPAWN $F035, 15
-	;SPAWN
-	;SPAWN
-	;SPAWN
 
 	; set-up each of the hardware subsystems
 	call Display_Init
