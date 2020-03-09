@@ -105,6 +105,46 @@ Sound_Init::
 
 	ret
 
+RSRESET
+BLOB_X RB 1
+BLOB_Y RB 1
+BLOB_ANIMATION RW 1
+BLOB_CLIP RB 1
+BLOB_FRAME RB 1
+BLOB_INTERVAL RB 1
+BLOB_SIZE RB 0
+
+BLOB_SHEET:
+INCBIN "blob.2bpp"
+BLOB_SHEET_END:
+BLOB_SHEET_SIZE EQU BLOB_SHEET_END-BLOB_SHEET
+
+Blob_Init:
+		; Spawn our blob process
+		ld de, BLOB_SIZE + PROCESS_SIZE
+		call Process_Alloc
+
+		; Put the address of Blob process address in HL
+		ld hl, Process_Top
+		call Kernel_PeekW
+		ld h, b
+		ld l, c
+
+		; Set the Code for the Blob process to BLOB_DRAW
+		ld bc, BLOB_DRAW
+		call Kernel_PokeW
+
+		MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
+
+		ret
+
+BLOB_DRAW::
+	; de ~> address of blob
+	ld h, d
+	ld l, e
+	inc [hl]
+	ret
+
 Kernel_Init::
 ; entrypoint passes to Kernel_Init to set the system up for use
 
@@ -114,20 +154,15 @@ Kernel_Init::
 	; wipe RAM
 	MEMSET _RAM, 0, $E000-$C000
 
-	; Set the Top to the start of ProcessSpace
-	ld hl, Process_Top
-	ld bc, Process_Space
-	call Kernel_PokeW
-
-	ld de, 10
-	call Process_Alloc
-
-	ld de, 15
-	call Process_Alloc
+	call Process_Init
 
 	; set-up each of the hardware subsystems
 	call Display_Init
 	call Sound_Init
+
+	call Blob_Init
+
+	call Display_Start
 
 	jp Kernel_Main
 
@@ -146,7 +181,7 @@ Kernel_Main::
 	ld a, 1
 	ld [Kernel_WaitingForVblank], a
 
-	; call Kernel_Method
+	call Process_Do
 
 	; and around we go again...
 	jp Kernel_Main

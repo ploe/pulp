@@ -37,8 +37,8 @@ Display_Init::
 	ld [rLCDC], a
 
 	; wipe VRAM and Sprite Attribute Table
-	MEMSET _VRAM, 0, $9FFF-$8000
-	MEMSET _OAMRAM, 0, $FE9F-$FE00
+	MEMSET _VRAM, 0, $A000-$8000
+	MEMSET _OAMRAM, 0, $FEA0-$FE00
 
 	; set BGP (background palette)
 	ld a, BGP_DEFAULT
@@ -57,7 +57,21 @@ Display_Init::
 	MEMCPY Display_DmaTransfer, Display_DmaTransferStart, Display_DmaTransferEnd - Display_DmaTransferStart
 
 	; copy HERO_SHEET in to tiles
-	MEMCPY _VRAM, HERO_SHEET, HERO_SHEET_SIZE
+	;MEMCPY _VRAM, HERO_SHEET, HERO_SHEET_SIZE
+
+	ret
+
+Display_Start::
+	; Turn on LCD, OBJ layer and BG later
+	ld a, LCDCF_ON | LCDCF_OBJON | LCDCF_BGON
+	ld [rLCDC], a
+
+	; Enable v-blank interrupt
+	ld a, IEF_VBLANK
+	ld [rIE], a
+
+	; Enable interrupts
+	ei
 
 	ret
 
