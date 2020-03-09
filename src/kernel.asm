@@ -134,6 +134,32 @@ Blob_Init:
 		ld bc, BLOB_DRAW
 		call Kernel_PokeW
 
+		ld de, BLOB_SIZE + PROCESS_SIZE
+		call Process_Alloc
+
+		; Put the address of Blob process address in HL
+		ld hl, Process_Top
+		call Kernel_PeekW
+		ld h, b
+		ld l, c
+
+		; Set the Code for the Blob process to BLOB_DRAW
+		ld bc, BLOB_DRAW
+		call Kernel_PokeW
+
+		ld de, BLOB_SIZE + PROCESS_SIZE
+		call Process_Alloc
+
+		; Put the address of Blob process address in HL
+		ld hl, Process_Top
+		call Kernel_PeekW
+		ld h, b
+		ld l, c
+
+		; Set the Code for the Blob process to BLOB_DRAW
+		ld bc, BLOB_DRAW
+		call Kernel_PokeW
+
 		MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
 
 		ret

@@ -18,10 +18,12 @@ Process_Init::
 	ret
 
 Process_Do::
-	; get the first Process address
+	; get the first Process address, and push it to the stack
 	ld hl, Process_Top
 	call Kernel_PeekW
+	push bc
 
+Process_Do_Again:
 	; Get the start of the Data
 	ld h, b
 	ld l, c
@@ -30,21 +32,39 @@ Process_Do::
 	ld d, h
 	ld e, l
 
-	; Get Code, the first element of the PROCESS struct
+	; Get the address of Code, the first element of the PROCESS struct
 	ld h, b
 	ld l, c
 
-	; get the Code and put leave in BC
+	; Get the value of Code and leave in BC
 	call Kernel_PeekW
 
-	ld hl, Process_Do_Ret
+	ld hl, Process_Do_GetNext
 	push hl
 
 	; Put Code in HL and jump to it
 	ld h, b
 	ld l, c
 	jp hl
-Process_Do_Ret:
+Process_Do_GetNext:
+	; Get the address of the next Process and put it in BC and push to stack
+	pop hl
+	ld bc, PROCESS_NEXT
+	add hl, bc
+	call Kernel_PeekW
+	push bc
+
+	; Check to see if Next is the end of PROCESS_SPACE
+	; BC is already set for the Process_Do_Again
+	ld hl, PROCESS_SPACE
+	call Kernel_SubW
+	ld a, h
+	or l
+	jp nz, Process_Do_Again
+
+	; If it is, we drop it and return the loop
+	pop bc
+
 	ret
 
 Process_Alloc::
