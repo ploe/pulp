@@ -1,0 +1,11 @@
+	IF !DEF(PROCESS_INC)
+PROCESS_INC SET 1
+
+RSRESET
+Process_Code RW 1
+Process_Next RW 1
+PROCESS_SIZE RB 0
+
+Process_Space EQU $E000
+
+ENDC

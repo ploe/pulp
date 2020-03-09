@@ -1,25 +1,13 @@
 INCLUDE "hardware.inc"
 
 INCLUDE "kernel.inc"
+INCLUDE "process.inc"
 
 SECTION "Kernel WRAM Data", WRAM0
 Kernel_ConsoleVersion:: db
 Kernel_WaitingForVblank: db
 
-
-Process_Top: dw
-;Process_This: dw
-
 SECTION "Kernel ROM0", ROM0
-
-RSRESET
-Process_Code RW 1
-; Process_Pid
-; Process_Bank RB 1
-Process_Next RW 1
-PROCESS_SIZE RB 0
-
-Process_Space EQU $E000
 
 SUBW: MACRO
 	; Subtract words subtrahend from minuend
@@ -58,43 +46,6 @@ Kernel_PeekW::
 	inc hl
 	ld c, [hl]
 	inc hl
-
-	ret
-
-Process_Alloc::
-	; cache Size in DE
-	ld d, h
-	ld e, l
-
-	; Put the value of Top in HL and push to the stack
-	ld hl, Process_Top
-	call Kernel_PeekW
-	push bc
-	ld h, b
-	ld l, c
-
-	; grab Size in BC
-	ld b, d
-	ld c, e
-
-	; Put new Top in BC
-	call Kernel_SubW
-	ld b, h
-	ld c, l
-
-	; set Top to new Top
-	ld hl, Process_Top
-	call Kernel_PokeW
-
-	; Get the address of Next in the new Top
-	ld h, b
-	ld l, c
-	ld bc, Process_Next
-	add hl, bc
-
-	; Load the old Top in to the new Top's next
-	pop bc
-	call Kernel_PokeW
 
 	ret
 
@@ -168,10 +119,10 @@ Kernel_Init::
 	ld bc, Process_Space
 	call Kernel_PokeW
 
-	ld hl, 10
+	ld de, 10
 	call Process_Alloc
 
-	ld hl, 15
+	ld de, 15
 	call Process_Alloc
 
 	; set-up each of the hardware subsystems

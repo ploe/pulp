@@ -17,5 +17,5 @@ fix: $(project).gb
 
 png: hero.2bpp
 
-$(project).gb: display.o entrypoint.o kernel.o
+$(project).gb: display.o entrypoint.o kernel.o process.o
 	rgblink -n $(project).sym -o $(project).gb $^
