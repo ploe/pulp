@@ -130,8 +130,8 @@ Blob_Init:
 		ld h, b
 		ld l, c
 
-		; Set the Code for the Blob process to BLOB_DRAW
-		ld bc, BLOB_DRAW
+		; Set the Method for the Blob process to Blob_DrawProcess
+		ld bc, Blob_DrawProcess
 		call Kernel_PokeW
 
 		ld de, BLOB_SIZE + PROCESS_SIZE
@@ -143,8 +143,8 @@ Blob_Init:
 		ld h, b
 		ld l, c
 
-		; Set the Code for the Blob process to BLOB_DRAW
-		ld bc, BLOB_DRAW
+		; Set the Method for the Blob process to Blob_DrawProcess
+		ld bc, Blob_DrawProcess
 		call Kernel_PokeW
 
 		ld de, BLOB_SIZE + PROCESS_SIZE
@@ -156,20 +156,26 @@ Blob_Init:
 		ld h, b
 		ld l, c
 
-		; Set the Code for the Blob process to BLOB_DRAW
-		ld bc, BLOB_DRAW
+		; Set the Method for the Blob process to Blob_DrawProcess
+		ld bc, Blob_DrawProcess
 		call Kernel_PokeW
 
 		MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
 
 		ret
 
-BLOB_DRAW::
+Blob_DrawProcess::
 	; de ~> address of blob
 	ld h, d
 	ld l, e
 	inc [hl]
-	ret
+	YIELD Blob_DrawProcessDec
+
+Blob_DrawProcessDec::
+	ld h, d
+	ld l, e
+	dec [hl]
+	YIELD Blob_DrawProcess
 
 Kernel_Init::
 ; entrypoint passes to Kernel_Init to set the system up for use

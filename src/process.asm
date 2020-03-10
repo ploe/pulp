@@ -22,7 +22,6 @@ Process_Do::
 	ld hl, Process_Top
 	call Kernel_PeekW
 	push bc
-
 Process_Do_Again:
 	; Get the start of the Data
 	ld h, b
@@ -32,21 +31,21 @@ Process_Do_Again:
 	ld d, h
 	ld e, l
 
-	; Get the address of Code, the first element of the PROCESS struct
+	; Get the address of Method, the first element of the PROCESS struct
 	ld h, b
 	ld l, c
 
-	; Get the value of Code and leave in BC
+	; Get the value of Method in HL and jump to it
 	call Kernel_PeekW
-
-	ld hl, Process_Do_GetNext
-	push hl
-
-	; Put Code in HL and jump to it
 	ld h, b
 	ld l, c
 	jp hl
-Process_Do_GetNext:
+Process_Do_Yield::
+	; Write the new Method callback in BC to PROCESS_METHOD
+	pop hl
+	push hl
+	call Kernel_PokeW
+
 	; Get the address of the next Process and put it in BC and push to stack
 	pop hl
 	ld bc, PROCESS_NEXT
