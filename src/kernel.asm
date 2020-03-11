@@ -134,47 +134,27 @@ Blob_Init:
 		ld bc, Blob_DrawProcess
 		call Kernel_PokeW
 
-		ld de, BLOB_SIZE + PROCESS_SIZE
-		call Process_Alloc
-
-		; Put the address of Blob process address in HL
-		ld hl, Process_Top
-		call Kernel_PeekW
-		ld h, b
-		ld l, c
-
-		; Set the Method for the Blob process to Blob_DrawProcess
-		ld bc, Blob_DrawProcess
-		call Kernel_PokeW
-
-		ld de, BLOB_SIZE + PROCESS_SIZE
-		call Process_Alloc
-
-		; Put the address of Blob process address in HL
-		ld hl, Process_Top
-		call Kernel_PeekW
-		ld h, b
-		ld l, c
-
-		; Set the Method for the Blob process to Blob_DrawProcess
-		ld bc, Blob_DrawProcess
-		call Kernel_PokeW
-
 		MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
 
 		ret
 
+RSRESET
+SPRITE_Y RB 1
+SPRITE_X RB 1
+SPRITE_TILE RB 1
+SPRITE_FLAGS RB 1
+SPRITE_SIZE RB 0
+
 Blob_DrawProcess::
 	; de ~> address of blob
-	ld h, d
-	ld l, e
-	inc [hl]
-	YIELD Blob_DrawProcessDec
-
-Blob_DrawProcessDec::
-	ld h, d
-	ld l, e
-	dec [hl]
+	ld a, 100
+	ld [OAM_BUFFER+SPRITE_Y], a
+	ld a, 100
+	ld [OAM_BUFFER+SPRITE_X], a
+	xor a
+	ld [SPRITE_TILE], a
+	ld [SPRITE_FLAGS], a
+	call Display_DmaTransfer
 	YIELD Blob_DrawProcess
 
 Kernel_Init::

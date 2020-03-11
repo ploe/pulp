@@ -6,12 +6,12 @@ INCLUDE "kernel.inc"
 
 SECTION "Display HRAM Data", HRAM[$FF80]
 ; the built-in DMA transfer locks up ROM, and so needs putting in HRAM
-Display_DmaTransfer:
+Display_DmaTransfer::
 
 SECTION "Display WRAM Data", WRAM0[$C000]
 ; OAM_BUFFER needs to be aligned with $XX00 as the	built-in DMA reads from
 ; there to $XX9F
-OAM_BUFFER: ds 4 * 40
+OAM_BUFFER:: ds 4 * 40
 
 SECTION "Display Code", ROM0
 
