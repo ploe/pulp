@@ -6,6 +6,7 @@ INCLUDE "process.inc"
 SECTION "Kernel WRAM Data", WRAM0
 Kernel_ConsoleVersion:: db
 Kernel_WaitingForVblank: db
+Meh: db
 
 SECTION "Kernel ROM0", ROM0
 
@@ -107,6 +108,7 @@ Sound_Init::
 
 ; Struct for Sprite
 RSRESET
+SPRITE_START RB 0
 SPRITE_Y RB 1
 SPRITE_X RB 1
 SPRITE_TILE RB 1
@@ -146,14 +148,22 @@ Blob_Init:
 	ld de, BLOB_SIZE + PROCESS_SIZE
 	call Process_Alloc
 
-	; Put the address of Blob process address in HL
+	; Put the address of Blob process address in HL and push to stack
 	ld hl, Process_Top
 	call Kernel_PeekW
 	ld h, b
 	ld l, c
+	push hl
 
 	; Set the Method for the Blob process to Blob_DrawProcess
 	ld bc, Blob_DrawProcess
+	call Kernel_PokeW
+
+	pop hl
+	ld bc, PROCESS_SIZE + BLOB_SPRITE + SPRITE_START
+	add hl, bc
+	ld b, 16
+	ld c, 100
 	call Kernel_PokeW
 
 	MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
@@ -162,18 +172,14 @@ Blob_Init:
 
 Blob_DrawProcess::
 	; de ~> address of Blob
+ 	; Set Size
+	ld bc, SPRITE_SIZE
 
-	; Put the OAM data in the OAM_BUFFER
-	ld h, d
-	ld l, e
-	call Kernel_PeekW
-	ld c, 100
+	; Set Destination
 	ld hl, OAM_BUFFER
-	call Kernel_PokeW
 
-	ld b, BLOB_CLIP_DOWN
-	ld c, 0
-	call Kernel_PokeW
+	; Fire Memcpy to put the data in the OAM Buffer
+	call Kernel_MemCpy
 
 	call Display_DmaTransfer
 
@@ -237,34 +243,40 @@ Blob_UpdateProcess::
 	cp DISPLAY_B - BLOB_H
 	jr z, .eq_display_b
 
-	jr .yield
+	jr .skip_clip
 
 .eq_display_t
-	; Unset BLOB_VECTOR_Y and YFLIP
+	; Unset BLOB_VECTOR_Y in BLOB_VECTORS
 	xor a
 	ld [hl], a
 
+	; Face downwards
 	ld a, BLOB_CLIP_DOWN
-
-	jr .yield
+	jr .set_clip
 
 .eq_display_b
 	; Put BLOB_VECTOR_Y in BLOB_VECTORS
 	ld a, BLOB_VECTOR_Y
 	ld [hl], a
-	ld a, BLOB_CLIP_DOWN
 
+	; Face upwards
+	ld a, BLOB_CLIP_UP
+	jr .set_clip
+
+.set_clip
+	; Set Blob Tile to Clip
+	pop hl
+	ld bc, SPRITE_TILE
+	add hl, bc
+	ld [hl], a
+	jr .yield
+
+.skip_clip
+	pop hl
 	jr .yield
 
 .yield
-	; Set BLOB_FLAGS to A
-	pop hl
-	ld bc, BLOB_SPRITE + SPRITE_TILE
-	add hl, bc
-	ld [hl], a
-
 	YIELD Blob_DrawProcess
-
 
 Kernel_Init::
 ; entrypoint passes to Kernel_Init to set the system up for use
