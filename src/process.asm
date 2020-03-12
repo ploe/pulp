@@ -17,12 +17,14 @@ Process_Init::
 
 	ret
 
-Process_Do::
+Process_PipelineDraw::
+Process_PipelineMove::
+Process_PipelineUpdate::
 	; get the first Process address, and push it to the stack
 	ld hl, Process_Top
 	call Kernel_PeekW
 	push bc
-Process_Do_Again:
+Process_Pipeline_Next:
 	; Get the start of the Data
 	ld h, b
 	ld l, c
@@ -40,7 +42,7 @@ Process_Do_Again:
 	ld h, b
 	ld l, c
 	jp hl
-Process_Do_Yield::
+Process_Pipeline_Yield::
 	; Write the new Method callback in BC to PROCESS_METHOD
 	pop hl
 	push hl
@@ -59,7 +61,7 @@ Process_Do_Yield::
 	call Kernel_SubW
 	ld a, h
 	or l
-	jp nz, Process_Do_Again
+	jp nz, Process_Pipeline_Next
 
 	; If it is, we drop it and return the loop
 	pop bc

@@ -10,7 +10,7 @@ all: png fix
 	rgbgfx -hu -o $@ $<
 
 clean:
-	rm -v *.o *.2bpp $(project).gb $(project).sym
+	rm -v *.o *.2bpp $(project).gb $(project).sav $(project).sym
 
 fix: $(project).gb
 	rgbfix -v -p 0 -m 0x10 -n 0x06 -r 0x03 $(project).gb

@@ -10,7 +10,7 @@ PROCESS_SPACE EQU $E000
 
 YIELD: MACRO
 	ld bc, \1
-	jp Process_Do_Yield
+	jp Process_Pipeline_Yield
 	ENDM
 
 ENDC
