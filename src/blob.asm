@@ -70,10 +70,12 @@ Blob_DrawProcess:
 	ld bc, SPRITE_SIZE
 
 	; Set Destination
-	ld hl, OAM_BUFFER
+	ld hl, Oam_Request_Buffer
 
 	; Fire Memcpy to put the data in the OAM Buffer
 	call Kernel_MemCpy
+
+	call Oam_Request
 
 	call Display_DmaTransfer
 
@@ -166,4 +168,3 @@ Blob_UpdateProcess:
 
 .yield
 	YIELD Blob_DrawProcess
-m

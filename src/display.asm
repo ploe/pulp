@@ -2,6 +2,7 @@
 INCLUDE "hardware.inc"
 
 ; project libs
+INCLUDE "display.inc"
 INCLUDE "kernel.inc"
 
 SECTION "Display HRAM Data", HRAM[$FF80]
@@ -9,9 +10,11 @@ SECTION "Display HRAM Data", HRAM[$FF80]
 Display_DmaTransfer::
 
 SECTION "Display WRAM Data", WRAM0[$C000]
-; OAM_BUFFER needs to be aligned with $XX00 as the	built-in DMA reads from
+; Oam_Sprite_Buffer needs to be aligned with $XX00 as the	built-in DMA reads from
 ; there to $XX9F
-OAM_BUFFER:: ds 4 * 40
+Oam_Sprite_Buffer:: ds SPRITE_SIZE * OAM_LIMIT
+Oam_Request_Buffer:: ds OAM_REQUEST_SIZE
+Oam_Top:: dw
 
 SECTION "Display Code", ROM0
 
@@ -23,6 +26,32 @@ HERO_SHEET_SIZE EQU HERO_SHEET_END-HERO_SHEET
 ; Constants
 BGP_DEFAULT EQU %11100100
 OBP0_DEFAULT EQU %11010000
+
+Oam_Reset::
+	ld hl, Oam_Top
+	ld bc, Oam_Sprite_Buffer
+	call Kernel_PokeW
+
+	ret
+
+Oam_Request::
+	; load DE with the address of Request_Buffer
+	ld de, Oam_Request_Buffer
+
+	; load HL with value of OAM Top and push it to the stack
+	ld hl, Oam_Top
+	call Kernel_PeekW
+	ld h, b
+	ld l, c
+	;push hl
+
+	; Has to be the size of the Sprite
+	ld bc, SPRITE_SIZE
+
+	; Move the requested Sprite in to the Oam_Sprite_Buffer
+	call Kernel_MemCpy
+
+	ret
 
 ; Methods
 Display_Init::
@@ -39,6 +68,8 @@ Display_Init::
 	; wipe VRAM and Sprite Attribute Table
 	MEMSET _VRAM, 0, $A000-$8000
 	MEMSET _OAMRAM, 0, $FEA0-$FE00
+
+	call Oam_Reset
 
 	; set BGP (background palette)
 	ld a, BGP_DEFAULT
@@ -78,9 +109,9 @@ Display_Start::
 DMA_DELAY EQU $28
 
 Display_DmaTransferStart:
-; this is the routine that transfers from OAM_BUFFER to the OAM in VRAM
+; this is the routine that transfers from Oam_Sprite_Buffer to the OAM in VRAM
 	; trigger DMA transfer
-	ld a, HIGH(OAM_BUFFER)
+	ld a, HIGH(Oam_Sprite_Buffer)
 	ld [rDMA], a
 
 	;
