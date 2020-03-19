@@ -6,15 +6,15 @@ INCLUDE "process.inc"
 SECTION "Kernel WRAM Data", WRAM0
 Kernel_ConsoleVersion:: db
 Kernel_WaitingForVblank: db
-Meh: db
 
 SECTION "Kernel ROM0", ROM0
 
 SUBW: MACRO
-	; Subtract words subtrahend from minuend
-	; \1 -> minuend
-	; \2 -> subtrahend
-	; result -> hl
+; Subtract words subtrahend from minuend
+; \1 ~> minuend
+; \2 ~> subtrahend
+; hl <~ result
+
 	ld hl, \1
 	ld bc, \2
 	call Kernel_SubW
@@ -22,10 +22,10 @@ SUBW: MACRO
 	ENDM
 
 Kernel_SubW::
-	; Subtract words subtrahend from minuend
-	; bc -> subtrahend
-	; hl -> minuend
-	; result -> hl
+; Subtract words subtrahend from minuend
+; bc ~> subtrahend
+; hl ~> minuend
+; hl <~ result
 
 	; Subtract word in BC from HL
 	ld a, l
@@ -38,35 +38,33 @@ Kernel_SubW::
 	ret
 
 Kernel_PeekW::
-	; Gets the value from source and pushes it to the stack
-	; destination <~ hl
-	; value ~> bc
-	; next ~> hl
+; Gets the word value from source
+; hl ~> source
+; bc <~ value
 
 	ld b, [hl]
 	inc hl
 	ld c, [hl]
-	inc hl
 
 	ret
 
 Kernel_PokeW::
-	; Sets destination to value and push the next address to the stack
-	; destination <~ hl
-	; value <~ bc
-	; next -> hl
+; Sets destination to value
+; destination <~ hl
+; value <~ bc
+
 	ld [hl], b
 	inc hl
 	ld [hl], c
-	inc hl
 
 	ret
 
 Kernel_MemCpy::
-; copies num number of bytes from source to destination
-; bc num
-; de source
-; hl destination
+; Copies num number of bytes from source to destination
+; bc ~> num
+; de ~> source
+; hl ~> destination
+
 .next_byte
 	; fetch what we have in source and copy it into destination
 	ld a, [de]
@@ -82,10 +80,11 @@ Kernel_MemCpy::
 	ret
 
 Kernel_MemSet::
-; for amount of bytes in size at destination set them to the value of value
-; hl destination
-; d value
-; bc size
+; For amount of bytes in size at destination set them to the value of value
+; hl ~> destination
+; d  ~> value
+; bc ~> size
+
 .next_byte
 	; fetch what we have in value and set it in destination
 	ld a, d
@@ -100,7 +99,7 @@ Kernel_MemSet::
 	ret
 
 Sound_Init::
-	; turn off the sound
+; Setup the Sound (disables it)
 	xor a
 	ld [rNR52], a
 
@@ -108,7 +107,7 @@ Sound_Init::
 
 
 Kernel_Init::
-; entrypoint passes to Kernel_Init to set the system up for use
+; Entrypoint passes to Kernel_Init to set the system up for use
 
 	; first value in register a is the sort of Game Boy we're running on
 	ld [Kernel_ConsoleVersion], a
@@ -129,8 +128,8 @@ Kernel_Init::
 	jp Kernel_Main
 
 Kernel_Main::
-; main heartbeat of the program, waits for the vblank interrupt and kicks off
-; the method
+; The main heartbeat of the program, waits for the vblank interrupt and kicks
+; off each method
 .wait
 	halt
 

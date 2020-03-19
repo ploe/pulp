@@ -11,7 +11,8 @@ Process_This:: dw
 SECTION "Process ROM0", ROM0
 
 Process_Init::
-	; Set the Top to the start of ProcessSpace
+; Set the Top to the start of PROCESS_SPACE
+
 	ld hl, Process_Top
 	ld bc, PROCESS_SPACE
 	call Kernel_PokeW
@@ -19,8 +20,9 @@ Process_Init::
 	ret
 
 Process_GetThisData::
-	; hl <~ address of PROCESS_DATA in Process_This
-	; bc <~ trashed
+; Get the start of the Data for the current Process
+; hl <~ PROCESS_DATA
+
 	ld hl, Process_This
 	call Kernel_PeekW
 	ld h, b
@@ -32,13 +34,20 @@ Process_GetThisData::
 	ret
 
 Process_PipelineDraw::
+; Iterate over the Processes and call their Draw Methods
 Process_PipelineMove::
+; Iterate over the Processes and call their Move Methods
 Process_PipelineUpdate::
-	; get the first Process address, and push it to the stack
+; Iterate over the Processes and call their Update methods
+
+	; Get the first Process address, and push it to the stack
 	ld hl, Process_Top
 	call Kernel_PeekW
 	push bc
+
 Process_Pipeline_Next:
+; Run the next Process in the Pipeline
+
 	; Set Process_This to the Process we're about to execute
 	ld hl, Process_This
 	call Kernel_PokeW
@@ -54,6 +63,7 @@ Process_Pipeline_Next:
 	jp hl
 Process_Pipeline_Yield::
 	; Write the new Method callback in BC to PROCESS_METHOD
+
 	pop hl
 	push hl
 	call Kernel_PokeW
@@ -79,15 +89,16 @@ Process_Pipeline_Yield::
 	ret
 
 Process_Alloc::
-	; DE <~ Size
-	; Put the value of Top in HL and push to the stack
+; DE <~ Size
+; Put the value of Top in HL and push to the stack
+
 	ld hl, Process_Top
 	call Kernel_PeekW
 	push bc
 	ld h, b
 	ld l, c
 
-	; grab Size in BC
+	; Put Size in BC
 	ld b, d
 	ld c, e
 
@@ -96,7 +107,7 @@ Process_Alloc::
 	ld b, h
 	ld c, l
 
-	; set Top to new Top
+	; Set Top to the new Top
 	ld hl, Process_Top
 	call Kernel_PokeW
 

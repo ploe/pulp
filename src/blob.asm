@@ -39,7 +39,9 @@ BLOB_SHEET_END:
 BLOB_SHEET_SIZE EQU BLOB_SHEET_END-BLOB_SHEET
 
 Blob_Init::
-	; Spawn our blob process
+; Setup a Blob process
+
+	; Allocate our process
 	ld de, BLOB_SIZE + PROCESS_SIZE
 	call Process_Alloc
 
@@ -67,7 +69,8 @@ Blob_Init::
 	ret
 
 Blob_DrawProcess:
-	; de ~> address of Blob
+; Draw a Blob
+; de ~> address of Blob
  	; Set Size
 	call Process_GetThisData
 	ld d, h
@@ -88,6 +91,7 @@ Blob_DrawProcess:
 	YIELD Blob_MoveProcess
 
 Blob_MoveProcess:
+; Move a Blob
 	; de ~> address of blob
 	call Process_GetThisData
 	push hl
@@ -118,7 +122,8 @@ Blob_MoveProcess:
 	YIELD Blob_UpdateProcess
 
 Blob_UpdateProcess:
-	; de ~> address of Blob
+; Update a Blob
+; de ~> address of Blob
 
 	; Switch BLOB_Y and push it to stack
 	call Process_GetThisData

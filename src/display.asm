@@ -10,8 +10,8 @@ SECTION "Display HRAM Data", HRAM[$FF80]
 Display_DmaTransfer::
 
 SECTION "Display WRAM Data", WRAM0[$C000]
-; Oam_Sprite_Buffer needs to be aligned with $XX00 as the	built-in DMA reads from
-; there to $XX9F
+; Oam_Sprite_Buffer needs to be aligned with $XX00 as the built-in DMA reads
+; from there to $XX9F
 Oam_Sprite_Buffer:: ds SPRITE_SIZE * OAM_LIMIT
 Oam_Request_Buffer:: ds OAM_REQUEST_SIZE
 Oam_Top:: dw
@@ -28,6 +28,7 @@ BGP_DEFAULT EQU %11100100
 OBP0_DEFAULT EQU %11010000
 
 Oam_Reset::
+; Set Oam_Top to the start of the Oam_Sprite_Buffer
 	ld hl, Oam_Top
 	ld bc, Oam_Sprite_Buffer
 	call Kernel_PokeW
@@ -35,7 +36,8 @@ Oam_Reset::
 	ret
 
 Oam_Request::
-	; load DE with the address of Request_Buffer
+; Set the Oam_Sprite_Buffer using the Oam_Request_Buffer
+	; Load DE with the address of Request_Buffer
 	ld de, Oam_Request_Buffer
 
 	; load HL with value of OAM Top and push it to the stack
@@ -43,7 +45,6 @@ Oam_Request::
 	call Kernel_PeekW
 	ld h, b
 	ld l, c
-	;push hl
 
 	; Has to be the size of the Sprite
 	ld bc, SPRITE_SIZE
@@ -55,6 +56,7 @@ Oam_Request::
 
 ; Methods
 Display_Init::
+; Setup the Display
 .wait
 	; wait until V-Blank period to turn off the LCDC
 	ld a, [rLY]
@@ -93,6 +95,8 @@ Display_Init::
 	ret
 
 Display_Start::
+; Start the Display
+
 	; Turn on LCD, OBJ layer and BG later
 	ld a, LCDCF_ON | LCDCF_OBJON | LCDCF_BGON
 	ld [rLCDC], a
@@ -109,7 +113,7 @@ Display_Start::
 DMA_DELAY EQU $28
 
 Display_DmaTransferStart:
-; this is the routine that transfers from Oam_Sprite_Buffer to the OAM in VRAM
+; This is the routine that transfers from Oam_Sprite_Buffer to the OAM in VRAM
 	; trigger DMA transfer
 	ld a, HIGH(Oam_Sprite_Buffer)
 	ld [rDMA], a
