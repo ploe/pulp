@@ -25,8 +25,11 @@ BLOB_VECTORS RB 1
 BLOB_SIZE RB 0
 
 ; Flags for BLOB_VECTORS
-BLOB_VECTOR_Y EQU %00000010
-BLOB_VECTOR_X EQU %00000001
+;BLOB_VECTOR_Y EQU %00000010
+BLOB_VECTOR_Y EQU 0
+BLOB_VECTOR_X EQU 1
+
+
 
 BLOB_W EQU 8
 BLOB_H EQU 8
@@ -92,12 +95,13 @@ Blob_MoveProcess:
 	add hl, bc
 
 	; If BLOB_VECTOR_Y ? increment_y : decrement_y
-	ld a, [hl]
-	cp BLOB_VECTOR_Y
+	bit BLOB_VECTOR_Y, [hl]
+
+	; Put Blob address in HL and load Y coordinate in
 	pop hl
 	push hl
 	ld a, [hl]
-	jr nz, .increment_y
+	jr z, .increment_y
 	jr .decrement_y
 
 .increment_y
@@ -138,8 +142,7 @@ Blob_UpdateProcess:
 
 .eq_display_t
 	; Unset BLOB_VECTOR_Y in BLOB_VECTORS
-	xor a
-	ld [hl], a
+	res BLOB_VECTOR_Y, [hl]
 
 	; Face downwards
 	ld a, BLOB_CLIP_DOWN
@@ -147,8 +150,7 @@ Blob_UpdateProcess:
 
 .eq_display_b
 	; Put BLOB_VECTOR_Y in BLOB_VECTORS
-	ld a, BLOB_VECTOR_Y
-	ld [hl], a
+	set BLOB_VECTOR_Y, [hl]
 
 	; Face upwards
 	ld a, BLOB_CLIP_UP
