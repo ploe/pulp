@@ -29,8 +29,7 @@ BLOB_SIZE RB 0
 BLOB_VECTOR_Y EQU 0
 BLOB_VECTOR_X EQU 1
 
-
-
+; Constants for Blob dimensions
 BLOB_W EQU 8
 BLOB_H EQU 8
 
@@ -70,6 +69,10 @@ Blob_Init::
 Blob_DrawProcess:
 	; de ~> address of Blob
  	; Set Size
+	call Process_GetThisData
+	ld d, h
+	ld e, l
+
 	ld bc, SPRITE_SIZE
 
 	; Set Destination
@@ -86,11 +89,10 @@ Blob_DrawProcess:
 
 Blob_MoveProcess:
 	; de ~> address of blob
-	push de
+	call Process_GetThisData
+	push hl
 
 	; Put the address of BLOB_VECTORS in HL
-	ld h, d
-	ld l, e
 	ld bc, BLOB_VECTORS
 	add hl, bc
 
@@ -99,7 +101,6 @@ Blob_MoveProcess:
 
 	; Put Blob address in HL and load Y coordinate in
 	pop hl
-	push hl
 	ld a, [hl]
 	jr z, .increment_y
 	jr .decrement_y
@@ -114,15 +115,13 @@ Blob_MoveProcess:
 
 .yield
 	ld [hl], a
-	pop de
 	YIELD Blob_UpdateProcess
 
 Blob_UpdateProcess:
 	; de ~> address of Blob
 
-	; Switch BLOB_Y and push HL to stack
-	ld h, d
-	ld l, e
+	; Switch BLOB_Y and push it to stack
+	call Process_GetThisData
 	push hl
 	ld a, [hl]
 

@@ -6,6 +6,7 @@ INCLUDE "process.inc"
 SECTION "Process WRAM Data", WRAM0
 
 Process_Top:: dw
+Process_This:: dw
 
 SECTION "Process ROM0", ROM0
 
@@ -17,6 +18,19 @@ Process_Init::
 
 	ret
 
+Process_GetThisData::
+	; hl <~ address of PROCESS_DATA in Process_This
+	; bc <~ trashed
+	ld hl, Process_This
+	call Kernel_PeekW
+	ld h, b
+	ld l, c
+
+	ld bc, PROCESS_DATA
+	add hl, bc
+
+	ret
+
 Process_PipelineDraw::
 Process_PipelineMove::
 Process_PipelineUpdate::
@@ -25,13 +39,9 @@ Process_PipelineUpdate::
 	call Kernel_PeekW
 	push bc
 Process_Pipeline_Next:
-	; Get the start of the Data
-	ld h, b
-	ld l, c
-	ld de, PROCESS_SIZE
-	add hl, de
-	ld d, h
-	ld e, l
+	; Set Process_This to the Process we're about to execute
+	ld hl, Process_This
+	call Kernel_PokeW
 
 	; Get the address of Method, the first element of the PROCESS struct
 	ld h, b
