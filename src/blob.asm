@@ -6,6 +6,8 @@ INCLUDE "display.inc"
 INCLUDE "kernel.inc"
 INCLUDE "process.inc"
 
+INCLUDE "blob.inc"
+
 SECTION "Blob Code", ROM0
 
 ; Enum for BLOB_CLIP
@@ -14,15 +16,6 @@ BLOB_CLIP_DOWN RW 1
 BLOB_CLIP_LEFT RW 0
 BLOB_CLIP_RIGHT RW 1
 BLOB_CLIP_UP RW 1
-
-; Struct for Blob
-RSRESET
-BLOB_SPRITE RB SPRITE_SIZE
-BLOB_VECTORS RB 1
-;BLOB_ANIMATION RW 1
-;BLOB_FRAME RB 1
-;BLOB_INTERVAL RB 1
-BLOB_SIZE RB 0
 
 ; Flags for BLOB_VECTORS
 ;BLOB_VECTOR_Y EQU %00000010
@@ -40,6 +33,7 @@ BLOB_SHEET_SIZE EQU BLOB_SHEET_END-BLOB_SHEET
 
 Blob_Init::
 ; Setup a Blob process
+; hl <~ Address of new Blob
 
 	; Allocate our process
 	ld de, BLOB_SIZE + PROCESS_SIZE
@@ -56,15 +50,13 @@ Blob_Init::
 	ld bc, Blob_DrawProcess
 	call Kernel_PokeW
 
-	; Set the Blob Spite Y and X
-	pop hl
-	ld bc, PROCESS_SIZE + BLOB_SPRITE + SPRITE_START
-	add hl, bc
-	ld b, 16
-	ld c, 100
-	call Kernel_PokeW
-
+	; Load in the SPRITE_SHEET
 	MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
+
+	; Get the address of the new Blob and leave it in HL
+	pop hl
+	ld bc, PROCESS_SIZE
+	add hl, bc
 
 	ret
 
@@ -85,8 +77,6 @@ Blob_DrawProcess:
 	call Kernel_MemCpy
 
 	call Oam_Request
-
-	call Display_DmaTransfer
 
 	YIELD Blob_MoveProcess
 

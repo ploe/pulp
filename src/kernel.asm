@@ -3,6 +3,9 @@ INCLUDE "hardware.inc"
 INCLUDE "kernel.inc"
 INCLUDE "process.inc"
 
+INCLUDE "display.inc"
+INCLUDE "blob.inc" ; shouldn't really be here
+
 SECTION "Kernel WRAM Data", WRAM0
 Kernel_ConsoleVersion:: db
 Kernel_WaitingForVblank: db
@@ -122,6 +125,16 @@ Kernel_Init::
 	call Sound_Init
 
 	call Blob_Init
+	POKE_MEMBER_W BLOB_SPRITE + SPRITE_START, $1064
+
+	call Blob_Init
+	POKE_MEMBER_W BLOB_SPRITE + SPRITE_START, $2216
+
+	call Blob_Init
+	POKE_MEMBER_W BLOB_SPRITE + SPRITE_START, $3342
+
+	call Blob_Init
+	POKE_MEMBER_W BLOB_SPRITE + SPRITE_START, $3336
 
 	call Display_Start
 
@@ -142,10 +155,14 @@ Kernel_Main::
 	ld a, 1
 	ld [Kernel_WaitingForVblank], a
 
+	call Display_DmaTransfer
+
+	call Oam_Reset
+
 	; Update the state of the game by calling the Pipeline functions
-	call Process_PipelineDraw
 	call Process_PipelineMove
 	call Process_PipelineUpdate
+	call Process_PipelineDraw
 
 	; and around we go again...
 	jp Kernel_Main

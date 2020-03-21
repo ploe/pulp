@@ -43,6 +43,7 @@ Oam_Request::
 	; load HL with value of OAM Top and push it to the stack
 	ld hl, Oam_Top
 	call Kernel_PeekW
+	push bc
 	ld h, b
 	ld l, c
 
@@ -51,6 +52,17 @@ Oam_Request::
 
 	; Move the requested Sprite in to the Oam_Sprite_Buffer
 	call Kernel_MemCpy
+
+	; calculate the next Oam_Top and set BC to it
+	pop hl
+	ld bc, SPRITE_SIZE
+	add hl, bc
+	ld b, h
+	ld c, l
+
+	; Set Oam_Top to the new value
+	ld hl, Oam_Top
+	call Kernel_PokeW
 
 	ret
 
@@ -70,8 +82,6 @@ Display_Init::
 	; wipe VRAM and Sprite Attribute Table
 	MEMSET _VRAM, 0, $A000-$8000
 	MEMSET _OAMRAM, 0, $FEA0-$FE00
-
-	call Oam_Reset
 
 	; set BGP (background palette)
 	ld a, BGP_DEFAULT

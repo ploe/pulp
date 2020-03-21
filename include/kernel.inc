@@ -45,4 +45,24 @@ MEMSET: MACRO
 
 	ENDM
 
+POKE_MEMBER_W: MACRO
+; Poke the word Value in to Data->Member, and set HL back to Data
+; hl ~> Data
+; \1 ~> Member
+; \2 ~> Value
+	push hl
+
+	; Set address in HL to Data->Member
+	ld bc, \1
+	add hl, bc
+
+	; Set value of Data->Member
+	ld bc, \2
+	call Kernel_PokeW
+
+	; return HL to its initial value
+	pop hl
+
+	ENDM
+
 ENDC
