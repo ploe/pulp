@@ -62,6 +62,28 @@ Kernel_PokeW::
 
 	ret
 
+Kernel_MemberSetW::
+; Sets Data->Member to Value and returns Data in HL
+; hl <~> Data address
+; de ~> Member offset
+; bc ~> Value
+
+	; Preserve Data address
+	push hl
+
+	; Add Member offset to Data address
+	add hl, de
+
+	; Load Value in to Data->Member
+	ld [hl], b
+	inc hl
+	ld [hl], c
+
+	; Reset HL to what it started as
+	pop hl
+
+	ret
+
 Kernel_MemCpy::
 ; Copies num number of bytes from source to destination
 ; bc ~> num
@@ -108,7 +130,6 @@ Sound_Init::
 
 	ret
 
-
 Kernel_Init::
 ; Entrypoint passes to Kernel_Init to set the system up for use
 
@@ -125,16 +146,34 @@ Kernel_Init::
 	call Sound_Init
 
 	call Blob_Init
-	POKE_MEMBER_W BLOB_SPRITE + SPRITE_START, $1064
+	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $0000
 
 	call Blob_Init
-	POKE_MEMBER_W BLOB_SPRITE + SPRITE_START, $2216
+	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $1111
 
 	call Blob_Init
-	POKE_MEMBER_W BLOB_SPRITE + SPRITE_START, $3342
+	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $2222
 
 	call Blob_Init
-	POKE_MEMBER_W BLOB_SPRITE + SPRITE_START, $3336
+	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $3333
+
+	call Blob_Init
+	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $4444
+
+	call Blob_Init
+	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $5555
+
+	call Blob_Init
+	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $6666
+
+	call Blob_Init
+	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $7777
+
+	call Blob_Init
+	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $8888
+
+	call Blob_Init
+	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $7799
 
 	call Display_Start
 
@@ -156,7 +195,6 @@ Kernel_Main::
 	ld [Kernel_WaitingForVblank], a
 
 	call Display_DmaTransfer
-
 	call Oam_Reset
 
 	; Update the state of the game by calling the Pipeline functions
