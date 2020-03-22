@@ -24,6 +24,107 @@ INCBIN "blob.2bpp"
 BLOB_SHEET_END:
 BLOB_SHEET_SIZE EQU BLOB_SHEET_END-BLOB_SHEET
 
+RSRESET
+ANIMATION_FRAME_DURATION RB 1
+ANIMATION_FRAME_NEXT RB 0
+ANIMATION_FRAME_CLIP RB 1
+ANIMATION_FRAME_OAM_FLAGS RB 1
+ANIMATION_FRAME_SPRITESHEET RW 1
+ANIMATION_FRAME_SIZE RB 0
+
+ANIMATION_END EQU 0
+
+Blob_DownAnimation::
+	; Frame 1
+	db 60, 0, 0
+	dw BLOB_SHEET
+
+	; Frame 2
+	db 60, 1, 0
+	dw BLOB_SHEET
+
+	; Go back to start
+	db ANIMATION_END
+;	db HIGH(Blob_DownAnimation), LOW(Blob_DownAnimation)
+	dw Blob_DownAnimation
+;	db 8, 8, 8
+
+Blob_NewDraw::
+	; Push This to the stack
+	call Process_GetThisData
+	push hl
+
+	; get the Frame Address
+	MEMBER_GET_W BLOB_FRAME
+	push bc
+
+	; Get the current interval and put it in B
+	MEMBER_GET_B BLOB_INTERVAL
+	ld b, a
+
+	; Get the Duration value from Frame address
+	pop hl
+	ld a, [hl]
+	cp b
+
+	; Play next frame
+	jr z, .next_frame
+
+	; Otherwise just increment the interval
+	jr .inc_interval
+
+.next_frame
+	; Reset interval
+	pop hl
+	xor a
+	ld de, BLOB_INTERVAL
+	call Kernel_MemberSetB
+
+	; Push This to stack
+	push hl
+
+	; Put the value of BLOB_FRAME in BC
+	MEMBER_GET_W BLOB_FRAME
+	ld h, b
+	ld l, c
+
+	; Increment to next frame and load to BC
+	ld de, ANIMATION_FRAME_SIZE
+	add hl, de
+	ld b, h
+	ld c, l
+
+	; Pop This and store new animation Frame
+	pop hl
+	ld de, BLOB_FRAME
+	call Kernel_MemberSetW
+
+	; Load the Duration of the new frame
+	ld h, b
+	ld l, c
+	ld a, [hl]
+	and a
+
+	; If the duration isn't zero we don't need to pick a new frame
+	ret nz
+
+	MEMBER_GET_W ANIMATION_FRAME_NEXT
+
+.lock
+
+	jr .lock
+
+	ret
+
+.inc_interval
+	pop hl
+	ld de, BLOB_INTERVAL
+	add hl, de
+
+	inc [hl]
+
+	ret
+
 Blob_Init::
 ; Setup a Blob process
 ; hl <~ Address of new Blob
@@ -137,4 +238,6 @@ Blob_UpdateProcess:
 	jr .yield
 
 .yield
+	call Blob_NewDraw
+
 	YIELD Blob_DrawProcess

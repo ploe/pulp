@@ -62,6 +62,46 @@ Kernel_PokeW::
 
 	ret
 
+Kernel_MemberGetW::
+; Gets value from Data->Member to Value
+; hl <~> Data address
+; de ~> Member offset
+; bc  <~ Value
+; Preserve Data address
+	push hl
+
+	; Add Member offset to Data address
+	add hl, de
+
+	; Get Value from Data->Member
+	ld b, [hl]
+	inc hl
+	ld c, [hl]
+
+	; Reset HL to what it started as
+	pop hl
+
+	ret
+
+Kernel_MemberGetB::
+; Gets value from Data->Member to Value
+; hl <~> Data address
+; de ~> Member offset
+; a  <~ Value
+	; Preserve Data address
+	push hl
+
+	; Add Member offset to Data address
+	add hl, de
+
+	; Load Value in to Data->Member
+	ld a, [hl]
+
+	; Reset HL to what it started as
+	pop hl
+
+	ret
+
 Kernel_MemberSetW::
 ; Sets Data->Member to Value and returns Data in HL
 ; hl <~> Data address
@@ -165,23 +205,23 @@ Kernel_Init::
 	call Display_Init
 	call Sound_Init
 
-	BLOB_SPAWN $11, $11, BLOB_CLIP_DOWN, %00000000
-	BLOB_SPAWN $33, $33, BLOB_CLIP_DOWN, %00000000
-	BLOB_SPAWN $55, $55, BLOB_CLIP_DOWN, %00000000
-	BLOB_SPAWN $77, $77, BLOB_CLIP_DOWN, %00000000
-	BLOB_SPAWN $11, $88, BLOB_CLIP_DOWN, %00000000
-	BLOB_SPAWN $33, $66, BLOB_CLIP_DOWN, %00000000
-	BLOB_SPAWN $55, $44, BLOB_CLIP_DOWN, %00000000
-	BLOB_SPAWN $77, $22, BLOB_CLIP_DOWN, %00000000
+	BLOB_SPAWN $11, $11, BLOB_CLIP_DOWN, %00000000, Blob_DownAnimation
+	;BLOB_SPAWN $33, $33, BLOB_CLIP_DOWN, %00000000
+	;BLOB_SPAWN $55, $55, BLOB_CLIP_DOWN, %00000000
+	;BLOB_SPAWN $77, $77, BLOB_CLIP_DOWN, %00000000
+	;BLOB_SPAWN $11, $88, BLOB_CLIP_DOWN, %00000000
+	;BLOB_SPAWN $33, $66, BLOB_CLIP_DOWN, %00000000
+	;BLOB_SPAWN $55, $44, BLOB_CLIP_DOWN, %00000000
+	;BLOB_SPAWN $77, $22, BLOB_CLIP_DOWN, %00000000
 
-	BLOB_SPAWN $22, $22, BLOB_CLIP_UP, %00000001
-	BLOB_SPAWN $44, $44, BLOB_CLIP_UP, %00000001
-	BLOB_SPAWN $66, $66, BLOB_CLIP_UP, %00000001
-	BLOB_SPAWN $88, $88, BLOB_CLIP_UP, %00000001
-	BLOB_SPAWN $22, $77, BLOB_CLIP_UP, %00000001
-	BLOB_SPAWN $44, $55, BLOB_CLIP_UP, %00000001
-	BLOB_SPAWN $66, $33, BLOB_CLIP_UP, %00000001
-	BLOB_SPAWN $88, $11, BLOB_CLIP_UP, %00000001
+	;BLOB_SPAWN $22, $22, BLOB_CLIP_UP, %00000001
+	;BLOB_SPAWN $44, $44, BLOB_CLIP_UP, %00000001
+	;BLOB_SPAWN $66, $66, BLOB_CLIP_UP, %00000001
+	;BLOB_SPAWN $88, $88, BLOB_CLIP_UP, %00000001
+	;BLOB_SPAWN $22, $77, BLOB_CLIP_UP, %00000001
+	;BLOB_SPAWN $44, $55, BLOB_CLIP_UP, %00000001
+	;BLOB_SPAWN $66, $33, BLOB_CLIP_UP, %00000001
+	;BLOB_SPAWN $88, $11, BLOB_CLIP_UP, %00000001
 
 	call Display_Start
 
