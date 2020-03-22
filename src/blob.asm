@@ -131,8 +131,8 @@ Blob_UpdateProcess:
 
 .set_clip
 	; Set Blob Tile to Clip
-	ld de, SPRITE_TILE
-	call Kernel_MemberSetW
+	ld de, BLOB_SPRITE + SPRITE_TILE
+	call Kernel_MemberSetB
 
 	jr .yield
 
