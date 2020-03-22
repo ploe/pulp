@@ -47,7 +47,7 @@ MEMSET: MACRO
 
 MEMBER_SET_B: MACRO
 ; Sets Data->Member to Value and returns Data in HL
-; hl ~> Data
+; hl <~> Data
 ; \1 ~> Member
 ; \2 ~> Value
 
@@ -59,7 +59,7 @@ MEMBER_SET_B: MACRO
 
 MEMBER_SET_W: MACRO
 ; Sets Data->Member to Value and returns Data in HL
-; hl ~> Data
+; hl <~> Data
 ; \1 ~> Member
 ; \2 ~> Value
 
@@ -69,5 +69,29 @@ MEMBER_SET_W: MACRO
 
 	ENDM
 
+MEMBER_BIT: MACRO
+; Test the bit and if so jump to true label
+; \1 ~> Member
+; \2 ~> Bit
+; \3 ~> True label
+; \4 ~> False label
+
+	; Preserve Data address
+	push hl
+
+	; Set HL to Data->Member address
+	ld de, \1
+	add hl, de
+
+	; Test if Bit is set
+	bit \2, [hl]
+
+	; Reset HL to Data address
+	pop hl
+
+	; if bit is set jump to true
+	jr nz, \3
+
+	ENDM
 
 ENDC

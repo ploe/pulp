@@ -75,33 +75,23 @@ Blob_DrawProcess:
 
 Blob_MoveProcess:
 ; Move a Blob
-	; de ~> address of blob
 	call Process_GetThisData
-	push hl
 
-	; Put the address of BLOB_VECTORS in HL
-	ld bc, BLOB_VECTORS
-	add hl, bc
+	; If BLOB_VECTOR_Y is set then move_up
+	MEMBER_BIT BLOB_VECTORS, BLOB_VECTOR_Y, .move_up
 
-	; If BLOB_VECTOR_Y ? increment_y : decrement_y
-	bit BLOB_VECTOR_Y, [hl]
+	; Otherwise move_down
+	jr .move_down
 
-	; Put Blob address in HL and load Y coordinate in
-	pop hl
-	ld a, [hl]
-	jr z, .increment_y
-	jr .decrement_y
-
-.increment_y
-	inc a
+.move_down
+	inc [hl]
 	jr .yield
 
-.decrement_y
-	dec a
+.move_up
+	dec [hl]
 	jr .yield
 
 .yield
-	ld [hl], a
 	YIELD Blob_UpdateProcess
 
 Blob_UpdateProcess:
