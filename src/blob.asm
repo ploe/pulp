@@ -78,7 +78,8 @@ Blob_MoveProcess:
 	call Process_GetThisData
 
 	; If BLOB_VECTOR_Y is set then move_up
-	MEMBER_BIT BLOB_VECTORS, BLOB_VECTOR_Y, .move_up
+	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_Y
+	jr nz, .move_up
 
 	; Otherwise move_down
 	jr .move_down
@@ -98,36 +99,31 @@ Blob_UpdateProcess:
 ; Update a Blob
 ; de ~> address of Blob
 
-	; Switch BLOB_Y and push it to stack
+	; Switch BLOB_Y
 	call Process_GetThisData
-	push hl
 	ld a, [hl]
-
-	; Put address of BLOB_VECTORS in HL
-	ld bc, BLOB_VECTORS
-	add hl, bc
 
 	; case DISPLAY_T
 	cp DISPLAY_T
-	jr z, .eq_display_t
+	jr z, .face_down
 
 	; case DISPLAY_H
 	cp DISPLAY_B - BLOB_H
-	jr z, .eq_display_b
+	jr z, .face_up
 
-	jr .skip_clip
+	jr .yield
 
-.eq_display_t
+.face_down
 	; Unset BLOB_VECTOR_Y in BLOB_VECTORS
-	res BLOB_VECTOR_Y, [hl]
+	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
 
 	; Face downwards
 	ld a, BLOB_CLIP_DOWN
 	jr .set_clip
 
-.eq_display_b
+.face_up
 	; Put BLOB_VECTOR_Y in BLOB_VECTORS
-	set BLOB_VECTOR_Y, [hl]
+	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
 
 	; Face upwards
 	ld a, BLOB_CLIP_UP
@@ -135,14 +131,9 @@ Blob_UpdateProcess:
 
 .set_clip
 	; Set Blob Tile to Clip
-	pop hl
-	ld bc, SPRITE_TILE
-	add hl, bc
-	ld [hl], a
-	jr .yield
+	ld de, SPRITE_TILE
+	call Kernel_MemberSetW
 
-.skip_clip
-	pop hl
 	jr .yield
 
 .yield
