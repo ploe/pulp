@@ -84,6 +84,26 @@ Kernel_MemberSetW::
 
 	ret
 
+Kernel_MemberSetB::
+; Sets Data->Member to Value and returns Data in HL
+; hl <~> Data address
+; de ~> Member offset
+; a  ~> Value
+
+	; Preserve Data address
+	push hl
+
+	; Add Member offset to Data address
+	add hl, de
+
+	; Load Value in to Data->Member
+	ld [hl], a
+
+	; Reset HL to what it started as
+	pop hl
+
+	ret
+
 Kernel_MemCpy::
 ; Copies num number of bytes from source to destination
 ; bc ~> num
@@ -150,30 +170,40 @@ Kernel_Init::
 
 	call Blob_Init
 	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $1111
+	MEMBER_SET_B BLOB_SPRITE + SPRITE_TILE, BLOB_CLIP_UP
+	MEMBER_SET_B BLOB_VECTORS, %00000001
 
 	call Blob_Init
 	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $2222
 
 	call Blob_Init
 	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $3333
+	MEMBER_SET_B BLOB_SPRITE + SPRITE_TILE, BLOB_CLIP_UP
+	MEMBER_SET_B BLOB_VECTORS, %00000001
 
 	call Blob_Init
 	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $4444
 
 	call Blob_Init
 	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $5555
+	MEMBER_SET_B BLOB_SPRITE + SPRITE_TILE, BLOB_CLIP_UP
+	MEMBER_SET_B BLOB_VECTORS, %00000001
 
 	call Blob_Init
 	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $6666
 
 	call Blob_Init
 	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $7777
+	MEMBER_SET_B BLOB_SPRITE + SPRITE_TILE, BLOB_CLIP_UP
+	MEMBER_SET_B BLOB_VECTORS, %00000001
 
 	call Blob_Init
 	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $8888
 
 	call Blob_Init
-	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $7799
+	MEMBER_SET_W BLOB_SPRITE + SPRITE_START, $5599
+	MEMBER_SET_B BLOB_SPRITE + SPRITE_TILE, BLOB_CLIP_UP
+	MEMBER_SET_B BLOB_VECTORS, %00000001
 
 	call Display_Start
 

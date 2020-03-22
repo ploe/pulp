@@ -45,6 +45,18 @@ MEMSET: MACRO
 
 	ENDM
 
+MEMBER_SET_B: MACRO
+; Sets Data->Member to Value and returns Data in HL
+; hl ~> Data
+; \1 ~> Member
+; \2 ~> Value
+
+	ld de, \1
+	ld a, \2
+	call Kernel_MemberSetB
+
+	ENDM
+
 MEMBER_SET_W: MACRO
 ; Sets Data->Member to Value and returns Data in HL
 ; hl ~> Data
