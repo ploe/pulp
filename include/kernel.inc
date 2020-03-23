@@ -45,6 +45,21 @@ MEMSET: MACRO
 
 	ENDM
 
+MEMBER_CHECKOUT_BYTE: MACRO
+	push hl
+
+	ld de, \1
+	add hl, de
+	ld a, [hl]
+
+	ENDM
+
+MEMBER_CHECKIN_BYTE: MACRO
+	ld [hl], a
+	pop hl
+
+	ENDM
+
 MEMBER_PEEK_BYTE: MACRO
 ; Get the Value in Data->Member and returns Data in HL
 ; hl <~> Data

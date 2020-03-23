@@ -200,30 +200,30 @@ Blob_DrawProcess:
 	YIELD Blob_MoveProcess
 
 moveDown:
-	MEMBER_PEEK_BYTE BLOB_SPRITE + SPRITE_Y
+	MEMBER_CHECKOUT_BYTE (BLOB_SPRITE + SPRITE_Y)
 	inc a
-	call Kernel_MemberPokeByte
+	MEMBER_CHECKIN_BYTE
 
 	ret
 
 moveUp:
-	MEMBER_PEEK_BYTE BLOB_SPRITE + SPRITE_Y
+	MEMBER_CHECKOUT_BYTE (BLOB_SPRITE + SPRITE_Y)
 	dec a
-	call Kernel_MemberPokeByte
+	MEMBER_CHECKIN_BYTE
 
 	ret
 
 moveLeft:
-	MEMBER_PEEK_BYTE BLOB_SPRITE + SPRITE_X
+	MEMBER_CHECKOUT_BYTE (BLOB_SPRITE + SPRITE_X)
 	inc a
-	call Kernel_MemberPokeByte
+	MEMBER_CHECKIN_BYTE
 
 	ret
 
 moveRight:
-	MEMBER_PEEK_BYTE BLOB_SPRITE + SPRITE_X
+	MEMBER_CHECKOUT_BYTE (BLOB_SPRITE + SPRITE_X)
 	dec a
-	call Kernel_MemberPokeByte
+	MEMBER_CHECKIN_BYTE
 
 	ret
 
