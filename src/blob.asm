@@ -199,26 +199,46 @@ Blob_DrawProcess:
 
 	YIELD Blob_MoveProcess
 
+moveDown:
+	MEMBER_PEEK_BYTE BLOB_SPRITE + SPRITE_Y
+	inc a
+	call Kernel_MemberPokeByte
+
+	ret
+
+moveUp:
+	MEMBER_PEEK_BYTE BLOB_SPRITE + SPRITE_Y
+	dec a
+	call Kernel_MemberPokeByte
+
+	ret
+
+moveLeft:
+	MEMBER_PEEK_BYTE BLOB_SPRITE + SPRITE_X
+	inc a
+	call Kernel_MemberPokeByte
+
+	ret
+
+moveRight:
+	MEMBER_PEEK_BYTE BLOB_SPRITE + SPRITE_X
+	dec a
+	call Kernel_MemberPokeByte
+
+	ret
+
 Blob_MoveProcess:
-; Move a Blob
 	call Process_GetThisData
 
-	; If BLOB_VECTOR_Y is set then move_up
 	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_Y
-	jr nz, .move_up
 
-	; Otherwise move_down
-	jr .move_down
+	call nz, moveUp
+	call z, moveDown
 
-.move_down
-	inc [hl]
-	jr .yield
+	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_X
+	call nz, moveRight
+	call z, moveLeft
 
-.move_up
-	dec [hl]
-	jr .yield
-
-.yield
 	YIELD Blob_UpdateProcess
 
 Blob_UpdateProcess:
