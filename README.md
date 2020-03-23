@@ -1,15 +1,15 @@
-todo
+# pulp
 
-Pickin' Sticks clone for GB(C)
-Stick Art
-Character Art
-Score Art
-Grass?
-Movement system
-Score system
-Sound effect on pick-up
+**pulp** is a framework for creating Game Boy (Color) games.
 
-Constraints
+It is a work in progress.
 
-subroutine calls shouldn't trash the registers
-GBC mode (exercise is to learn more about this)
+## License
+
+```
+Copyright (C) 2020 by Ploe
+
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+```

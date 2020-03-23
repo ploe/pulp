@@ -1,4 +1,4 @@
-project = stix
+project = pulp
 
 # all: gfx asm link fix
 all: png fix

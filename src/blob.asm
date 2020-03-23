@@ -35,16 +35,29 @@ REEL_SENTINEL EQU 0
 
 BLOB_REEL_DOWN::
 	; Frame 1
-	db 15, 0
+	db 15, BLOB_CLIP_DOWN
 	dw BLOB_SHEET
 
 	; Frame 2
-	db 15, 1
+	db 15, BLOB_CLIP_DOWN + 1
 	dw BLOB_SHEET
 
 	; Go back to start
 	db REEL_SENTINEL
 	dw BLOB_REEL_DOWN
+
+BLOB_REEL_UP::
+	; Frame 1
+	db 15, BLOB_CLIP_UP
+	dw BLOB_SHEET
+
+	; Frame 2
+	db 15, BLOB_CLIP_UP + 1
+	dw BLOB_SHEET
+
+	; Go back to start
+	db REEL_SENTINEL
+	dw BLOB_REEL_UP
 
 Blob_PlayReel::
 	; Push This to the stack
@@ -231,7 +244,7 @@ Blob_UpdateProcess:
 	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
 
 	; Face downwards
-	ld a, BLOB_CLIP_DOWN
+	ld bc, BLOB_REEL_DOWN
 	jr .set_clip
 
 .face_up
@@ -239,13 +252,13 @@ Blob_UpdateProcess:
 	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
 
 	; Face upwards
-	ld a, BLOB_CLIP_UP
+	ld bc, BLOB_REEL_UP
 	jr .set_clip
 
 .set_clip
 	; Set Blob Tile to Clip
-	ld de, BLOB_SPRITE + SPRITE_TILE
-	call Kernel_MemberPokeByte
+	ld de, BLOB_FRAME
+	call Kernel_MemberPokeWord
 
 	jr .yield
 
