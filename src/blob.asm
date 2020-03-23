@@ -28,26 +28,25 @@ RSRESET
 REEL_FRAME_DURATION RB 1
 REEL_NEXT RB 0
 REEL_FRAME_CLIP RB 1
-REEL_FRAME_OAM_FLAGS RB 1
 REEL_FRAME_SPRITESHEET RW 1
 REEL_FRAME_SIZE RB 0
 
 REEL_SENTINEL EQU 0
 
-Blob_DownAnimation::
+BLOB_REEL_DOWN::
 	; Frame 1
-	db 60, 0, 0
+	db 15, 0
 	dw BLOB_SHEET
 
 	; Frame 2
-	db 60, 1, 0
+	db 15, 1
 	dw BLOB_SHEET
 
 	; Go back to start
 	db REEL_SENTINEL
-	dw Blob_DownAnimation
+	dw BLOB_REEL_DOWN
 
-Blob_NewDraw::
+Blob_PlayReel::
 	; Push This to the stack
 	call Process_GetThisData
 	push hl
@@ -65,11 +64,16 @@ Blob_NewDraw::
 	ld a, [hl]
 	cp b
 
-	; Play next frame
+	; Get next frame in reel
 	jr z, .next_frame
 
 	; Otherwise just increment the interval
-	jr .inc_interval
+	pop hl
+	ld de, BLOB_INTERVAL
+	add hl, de
+	inc [hl]
+
+	ret
 
 .next_frame
 	; Reset interval
@@ -118,14 +122,6 @@ Blob_NewDraw::
 
 	ret
 
-.inc_interval
-	pop hl
-	ld de, BLOB_INTERVAL
-	add hl, de
-
-	inc [hl]
-
-	ret
 
 Blob_Init::
 ; Setup a Blob process
@@ -157,13 +153,26 @@ Blob_Init::
 	ret
 
 Blob_DrawProcess:
-; Draw a Blob
-; de ~> address of Blob
- 	; Set Size
+	; Get This and push it to the stack
 	call Process_GetThisData
+	push hl
+
+	; Put the current frame in HL
+	MEMBER_PEEK_WORD BLOB_FRAME
+	ld h, b
+	ld l, c
+
+	; Get the CLIP and set TILE on this
+	MEMBER_PEEK_BYTE REEL_FRAME_CLIP
+	pop hl
+	ld de, BLOB_SPRITE + SPRITE_TILE
+	call Kernel_MemberPokeByte
+
+	; Set Source to this
 	ld d, h
 	ld e, l
 
+	; Set Size
 	ld bc, SPRITE_SIZE
 
 	; Set Destination
@@ -173,6 +182,7 @@ Blob_DrawProcess:
 	call Kernel_MemCpy
 
 	call Oam_Request
+
 
 	YIELD Blob_MoveProcess
 
@@ -240,6 +250,6 @@ Blob_UpdateProcess:
 	jr .yield
 
 .yield
-	call Blob_NewDraw
+	call Blob_PlayReel
 
 	YIELD Blob_DrawProcess
