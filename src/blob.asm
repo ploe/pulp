@@ -235,54 +235,47 @@ Blob_MoveProcess:
 	call nz, moveUp
 	call z, moveDown
 
-	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_X
-	call nz, moveRight
-	call z, moveLeft
+	;MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_X
+	;call nz, moveRight
+	;call z, moveLeft
 
 	YIELD Blob_UpdateProcess
 
-Blob_UpdateProcess:
-; Update a Blob
-; de ~> address of Blob
 
-	; Switch BLOB_Y
-	call Process_GetThisData
-	ld a, [hl]
-
-	; case DISPLAY_T
-	cp DISPLAY_T
-	jr z, .face_down
-
-	; case DISPLAY_H
-	cp DISPLAY_B - BLOB_H
-	jr z, .face_up
-
-	jr .yield
-
-.face_down
-	; Unset BLOB_VECTOR_Y in BLOB_VECTORS
+faceDown:
 	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
 
-	; Face downwards
 	ld bc, BLOB_REEL_DOWN
-	jr .set_clip
-
-.face_up
-	; Put BLOB_VECTOR_Y in BLOB_VECTORS
-	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
-
-	; Face upwards
-	ld bc, BLOB_REEL_UP
-	jr .set_clip
-
-.set_clip
-	; Set Blob Tile to Clip
 	ld de, BLOB_FRAME
 	call Kernel_MemberPokeWord
 
-	jr .yield
+	ret
 
-.yield
+faceUp:
+	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
+
+	ld bc, BLOB_REEL_UP
+	ld de, BLOB_FRAME
+	call Kernel_MemberPokeWord
+
+	ret
+
+Blob_UpdateProcess::
+	call Process_GetThisData
+
+	; Get BLOB_Y
+	MEMBER_PEEK_BYTE BLOB_SPRITE + SPRITE_Y
+	push af
+
+	; If at top of the display faceDown
+	cp DISPLAY_T
+	call z, faceDown
+
+	; If at bottom of the display faceUp
+	pop af
+	cp DISPLAY_B - BLOB_H
+	call z, faceUp
+
 	call Blob_PlayReel
 
 	YIELD Blob_DrawProcess
