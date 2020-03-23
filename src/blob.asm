@@ -25,14 +25,14 @@ BLOB_SHEET_END:
 BLOB_SHEET_SIZE EQU BLOB_SHEET_END-BLOB_SHEET
 
 RSRESET
-ANIMATION_FRAME_DURATION RB 1
-ANIMATION_FRAME_NEXT RB 0
-ANIMATION_FRAME_CLIP RB 1
-ANIMATION_FRAME_OAM_FLAGS RB 1
-ANIMATION_FRAME_SPRITESHEET RW 1
-ANIMATION_FRAME_SIZE RB 0
+REEL_FRAME_DURATION RB 1
+REEL_NEXT RB 0
+REEL_FRAME_CLIP RB 1
+REEL_FRAME_OAM_FLAGS RB 1
+REEL_FRAME_SPRITESHEET RW 1
+REEL_FRAME_SIZE RB 0
 
-ANIMATION_END EQU 0
+REEL_SENTINEL EQU 0
 
 Blob_DownAnimation::
 	; Frame 1
@@ -44,10 +44,8 @@ Blob_DownAnimation::
 	dw BLOB_SHEET
 
 	; Go back to start
-	db ANIMATION_END
-;	db HIGH(Blob_DownAnimation), LOW(Blob_DownAnimation)
+	db REEL_SENTINEL
 	dw Blob_DownAnimation
-;	db 8, 8, 8
 
 Blob_NewDraw::
 	; Push This to the stack
@@ -89,12 +87,12 @@ Blob_NewDraw::
 	ld l, c
 
 	; Increment to next frame and load to BC
-	ld de, ANIMATION_FRAME_SIZE
+	ld de, REEL_FRAME_SIZE
 	add hl, de
 	ld b, h
 	ld c, l
 
-	; Pop This and store new animation Frame
+	; Pop This and store new frame
 	pop hl
 	ld de, BLOB_FRAME
 	call Kernel_MemberSetW
@@ -105,14 +103,18 @@ Blob_NewDraw::
 	ld a, [hl]
 	and a
 
-	; If the duration isn't zero we don't need to pick a new frame
+	; If the duration is REEL_SENTINEL we need set a new REEL
 	ret nz
 
-	MEMBER_GET_W ANIMATION_FRAME_NEXT
+	; Get the address of the next reel to play and save it
+	MEMBER_GET_W REEL_NEXT
+	push bc
 
-.lock
-
-	jr .lock
+	; Set this->frame to the next reel
+	call Process_GetThisData
+	pop bc
+	ld de, BLOB_FRAME
+	call Kernel_MemberSetW
 
 	ret
 

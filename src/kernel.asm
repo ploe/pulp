@@ -45,9 +45,9 @@ Kernel_PeekW::
 ; hl ~> source
 ; bc <~ value
 
-	ld b, [hl]
-	inc hl
 	ld c, [hl]
+	inc hl
+	ld b, [hl]
 
 	ret
 
@@ -56,9 +56,9 @@ Kernel_PokeW::
 ; destination <~ hl
 ; value <~ bc
 
-	ld [hl], b
-	inc hl
 	ld [hl], c
+	inc hl
+	ld [hl], b
 
 	ret
 
@@ -74,9 +74,9 @@ Kernel_MemberGetW::
 	add hl, de
 
 	; Get Value from Data->Member
-	ld b, [hl]
-	inc hl
 	ld c, [hl]
+	inc hl
+	ld b, [hl]
 
 	; Reset HL to what it started as
 	pop hl
@@ -115,9 +115,9 @@ Kernel_MemberSetW::
 	add hl, de
 
 	; Load Value in to Data->Member
-	ld [hl], b
-	inc hl
 	ld [hl], c
+	inc hl
+	ld [hl], b
 
 	; Reset HL to what it started as
 	pop hl
