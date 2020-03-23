@@ -15,7 +15,7 @@ Process_Init::
 
 	ld hl, Process_Top
 	ld bc, PROCESS_SPACE
-	call Kernel_PokeW
+	call Kernel_PokeWord
 
 	ret
 
@@ -24,7 +24,7 @@ Process_GetThisData::
 ; hl <~ PROCESS_DATA
 
 	ld hl, Process_This
-	call Kernel_PeekW
+	call Kernel_PeekWord
 	ld h, b
 	ld l, c
 
@@ -42,7 +42,7 @@ Process_PipelineUpdate::
 
 	; Get the first Process address, and push it to the stack
 	ld hl, Process_Top
-	call Kernel_PeekW
+	call Kernel_PeekWord
 	push bc
 
 Process_Pipeline_Next:
@@ -50,14 +50,14 @@ Process_Pipeline_Next:
 
 	; Set Process_This to the Process we're about to execute
 	ld hl, Process_This
-	call Kernel_PokeW
+	call Kernel_PokeWord
 
 	; Get the address of Method, the first element of the PROCESS struct
 	ld h, b
 	ld l, c
 
 	; Get the value of Method in HL and jump to it
-	call Kernel_PeekW
+	call Kernel_PeekWord
 	ld h, b
 	ld l, c
 	jp hl
@@ -66,19 +66,19 @@ Process_Pipeline_Yield::
 
 	pop hl
 	push hl
-	call Kernel_PokeW
+	call Kernel_PokeWord
 
 	; Get the address of the next Process and put it in BC and push to stack
 	pop hl
 	ld bc, PROCESS_NEXT
 	add hl, bc
-	call Kernel_PeekW
+	call Kernel_PeekWord
 	push bc
 
 	; Check to see if Next is the end of PROCESS_SPACE
 	; BC is already set for the Process_Do_Again
 	ld hl, PROCESS_SPACE
-	call Kernel_SubW
+	call Kernel_SubWord
 	ld a, h
 	or l
 	jp nz, Process_Pipeline_Next
@@ -93,7 +93,7 @@ Process_Alloc::
 ; Put the value of Top in HL and push to the stack
 
 	ld hl, Process_Top
-	call Kernel_PeekW
+	call Kernel_PeekWord
 	push bc
 	ld h, b
 	ld l, c
@@ -103,13 +103,13 @@ Process_Alloc::
 	ld c, e
 
 	; Put new Top in BC
-	call Kernel_SubW
+	call Kernel_SubWord
 	ld b, h
 	ld c, l
 
 	; Set Top to the new Top
 	ld hl, Process_Top
-	call Kernel_PokeW
+	call Kernel_PokeWord
 
 	; Get the address of Next in the new Top
 	ld h, b
@@ -119,6 +119,6 @@ Process_Alloc::
 
 	; Load the old Top in to the new Top's next
 	pop bc
-	call Kernel_PokeW
+	call Kernel_PokeWord
 
 	ret

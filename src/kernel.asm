@@ -20,11 +20,11 @@ SUBW: MACRO
 
 	ld hl, \1
 	ld bc, \2
-	call Kernel_SubW
+	call Kernel_SubWord
 
 	ENDM
 
-Kernel_SubW::
+Kernel_SubWord::
 ; Subtract words subtrahend from minuend
 ; bc ~> subtrahend
 ; hl ~> minuend
@@ -40,7 +40,7 @@ Kernel_SubW::
 
 	ret
 
-Kernel_PeekW::
+Kernel_PeekWord::
 ; Gets the word value from source
 ; hl ~> source
 ; bc <~ value
@@ -51,7 +51,7 @@ Kernel_PeekW::
 
 	ret
 
-Kernel_PokeW::
+Kernel_PokeWord::
 ; Sets destination to value
 ; destination <~ hl
 ; value <~ bc
@@ -62,7 +62,7 @@ Kernel_PokeW::
 
 	ret
 
-Kernel_MemberGetW::
+Kernel_MemberPeekWord::
 ; Gets value from Data->Member to Value
 ; hl <~> Data address
 ; de ~> Member offset
@@ -83,7 +83,7 @@ Kernel_MemberGetW::
 
 	ret
 
-Kernel_MemberGetB::
+Kernel_MemberPeekByte::
 ; Gets value from Data->Member to Value
 ; hl <~> Data address
 ; de ~> Member offset
@@ -102,7 +102,7 @@ Kernel_MemberGetB::
 
 	ret
 
-Kernel_MemberSetW::
+Kernel_MemberPokeWord::
 ; Sets Data->Member to Value and returns Data in HL
 ; hl <~> Data address
 ; de ~> Member offset
@@ -124,7 +124,7 @@ Kernel_MemberSetW::
 
 	ret
 
-Kernel_MemberSetB::
+Kernel_MemberPokeByte::
 ; Sets Data->Member to Value and returns Data in HL
 ; hl <~> Data address
 ; de ~> Member offset

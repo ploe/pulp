@@ -45,25 +45,25 @@ MEMSET: MACRO
 
 	ENDM
 
-MEMBER_GET_B: MACRO
+MEMBER_PEEK_BYTE: MACRO
 ; Get the Value in Data->Member and returns Data in HL
 ; hl <~> Data
 ; \1 ~> Member
 	ld de, \1
-	call Kernel_MemberGetB
+	call Kernel_MemberPeekByte
 
 	ENDM
 
-MEMBER_GET_W: MACRO
+MEMBER_PEEK_WORD: MACRO
 ; Get the Value in Data->Member and returns Data in HL
 ; hl <~> Data
 ; \1 ~> Member
 	ld de, \1
-	call Kernel_MemberGetW
+	call Kernel_MemberPeekWord
 
 	ENDM
 
-MEMBER_SET_B: MACRO
+MEMBER_POKE_BYTE: MACRO
 ; Sets Data->Member to Value and returns Data in HL
 ; hl <~> Data
 ; \1 ~> Member
@@ -71,11 +71,11 @@ MEMBER_SET_B: MACRO
 
 	ld de, \1
 	ld a, \2
-	call Kernel_MemberSetB
+	call Kernel_MemberPokeByte
 
 	ENDM
 
-MEMBER_SET_W: MACRO
+MEMBER_POKE_WORD: MACRO
 ; Sets Data->Member to Value and returns Data in HL
 ; hl <~> Data
 ; \1 ~> Member
@@ -83,7 +83,7 @@ MEMBER_SET_W: MACRO
 
 	ld de, \1
 	ld bc, \2
-	call Kernel_MemberSetW
+	call Kernel_MemberPokeWord
 
 	ENDM
 

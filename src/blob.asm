@@ -53,11 +53,11 @@ Blob_NewDraw::
 	push hl
 
 	; get the Frame Address
-	MEMBER_GET_W BLOB_FRAME
+	MEMBER_PEEK_WORD BLOB_FRAME
 	push bc
 
 	; Get the current interval and put it in B
-	MEMBER_GET_B BLOB_INTERVAL
+	MEMBER_PEEK_BYTE BLOB_INTERVAL
 	ld b, a
 
 	; Get the Duration value from Frame address
@@ -76,13 +76,13 @@ Blob_NewDraw::
 	pop hl
 	xor a
 	ld de, BLOB_INTERVAL
-	call Kernel_MemberSetB
+	call Kernel_MemberPokeByte
 
 	; Push This to stack
 	push hl
 
 	; Put the value of BLOB_FRAME in BC
-	MEMBER_GET_W BLOB_FRAME
+	MEMBER_PEEK_WORD BLOB_FRAME
 	ld h, b
 	ld l, c
 
@@ -95,7 +95,7 @@ Blob_NewDraw::
 	; Pop This and store new frame
 	pop hl
 	ld de, BLOB_FRAME
-	call Kernel_MemberSetW
+	call Kernel_MemberPokeWord
 
 	; Load the Duration of the new frame
 	ld h, b
@@ -107,14 +107,14 @@ Blob_NewDraw::
 	ret nz
 
 	; Get the address of the next reel to play and save it
-	MEMBER_GET_W REEL_NEXT
+	MEMBER_PEEK_WORD REEL_NEXT
 	push bc
 
 	; Set this->frame to the next reel
 	call Process_GetThisData
 	pop bc
 	ld de, BLOB_FRAME
-	call Kernel_MemberSetW
+	call Kernel_MemberPokeWord
 
 	ret
 
@@ -137,14 +137,14 @@ Blob_Init::
 
 	; Put the address of Blob process address in HL and push to stack
 	ld hl, Process_Top
-	call Kernel_PeekW
+	call Kernel_PeekWord
 	ld h, b
 	ld l, c
 	push hl
 
 	; Set the Method for the Blob process to Blob_DrawProcess
 	ld bc, Blob_DrawProcess
-	call Kernel_PokeW
+	call Kernel_PokeWord
 
 	; Load in the SPRITE_SHEET
 	MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
@@ -235,7 +235,7 @@ Blob_UpdateProcess:
 .set_clip
 	; Set Blob Tile to Clip
 	ld de, BLOB_SPRITE + SPRITE_TILE
-	call Kernel_MemberSetB
+	call Kernel_MemberPokeByte
 
 	jr .yield
 

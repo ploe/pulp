@@ -31,7 +31,7 @@ Oam_Reset::
 ; Set Oam_Top to the start of the Oam_Sprite_Buffer
 	ld hl, Oam_Top
 	ld bc, Oam_Sprite_Buffer
-	call Kernel_PokeW
+	call Kernel_PokeWord
 
 	ret
 
@@ -42,7 +42,7 @@ Oam_Request::
 
 	; load HL with value of OAM Top and push it to the stack
 	ld hl, Oam_Top
-	call Kernel_PeekW
+	call Kernel_PeekWord
 	push bc
 	ld h, b
 	ld l, c
@@ -62,7 +62,7 @@ Oam_Request::
 
 	; Set Oam_Top to the new value
 	ld hl, Oam_Top
-	call Kernel_PokeW
+	call Kernel_PokeWord
 
 	ret
 
