@@ -62,46 +62,6 @@ Kernel_PokeWord::
 
 	ret
 
-Kernel_MemberPeekWord::
-; Gets value from Data->Member to Value
-; hl <~> Data address
-; de ~> Member offset
-; bc  <~ Value
-; Preserve Data address
-	push hl
-
-	; Add Member offset to Data address
-	add hl, de
-
-	; Get Value from Data->Member
-	ld c, [hl]
-	inc hl
-	ld b, [hl]
-
-	; Reset HL to what it started as
-	pop hl
-
-	ret
-
-Kernel_MemberPeekByte::
-; Gets value from Data->Member to Value
-; hl <~> Data address
-; de ~> Member offset
-; a  <~ Value
-	; Preserve Data address
-	push hl
-
-	; Add Member offset to Data address
-	add hl, de
-
-	; Load Value in to Data->Member
-	ld a, [hl]
-
-	; Reset HL to what it started as
-	pop hl
-
-	ret
-
 Kernel_MemberPokeWord::
 ; Sets Data->Member to Value and returns Data in HL
 ; hl <~> Data address

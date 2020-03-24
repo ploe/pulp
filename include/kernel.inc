@@ -64,8 +64,19 @@ MEMBER_PEEK_BYTE: MACRO
 ; Get the Value in Data->Member and returns Data in HL
 ; hl <~> Data
 ; \1 ~> Member
+
+	; Preserve Data address
+	push hl
+
+	; Add Member offset to Data address
 	ld de, \1
-	call Kernel_MemberPeekByte
+	add hl, de
+
+	; Load Value in to Data->Member
+	ld a, [hl]
+
+	; Reset HL to what it started as
+	pop hl
 
 	ENDM
 
@@ -73,8 +84,20 @@ MEMBER_PEEK_WORD: MACRO
 ; Get the Value in Data->Member and returns Data in HL
 ; hl <~> Data
 ; \1 ~> Member
+	; Preserve Data address
+	push hl
+
+	; Add Member offset to Data address
 	ld de, \1
-	call Kernel_MemberPeekWord
+	add hl, de
+
+	; Get Value from Data->Member
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+
+	; Reset HL to what it started as
+	pop hl
 
 	ENDM
 
