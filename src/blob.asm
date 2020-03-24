@@ -167,6 +167,8 @@ Blob_Init::
 
 Blob_DrawProcess:
 	; Get This and push it to the stack
+	call Blob_PlayReel
+	
 	call Process_GetThisData
 	push hl
 
@@ -200,30 +202,30 @@ Blob_DrawProcess:
 	YIELD Blob_MoveProcess
 
 moveDown:
-	MEMBER_CHECKOUT_BYTE (BLOB_SPRITE + SPRITE_Y)
+	MEMBER_SUCK_BYTE (BLOB_SPRITE + SPRITE_Y)
 	inc a
-	MEMBER_CHECKIN_BYTE
+	MEMBER_SPIT_BYTE
 
 	ret
 
 moveUp:
-	MEMBER_CHECKOUT_BYTE (BLOB_SPRITE + SPRITE_Y)
+	MEMBER_SUCK_BYTE (BLOB_SPRITE + SPRITE_Y)
 	dec a
-	MEMBER_CHECKIN_BYTE
+	MEMBER_SPIT_BYTE
 
 	ret
 
 moveLeft:
-	MEMBER_CHECKOUT_BYTE (BLOB_SPRITE + SPRITE_X)
+	MEMBER_SUCK_BYTE (BLOB_SPRITE + SPRITE_X)
 	inc a
-	MEMBER_CHECKIN_BYTE
+	MEMBER_SPIT_BYTE
 
 	ret
 
 moveRight:
-	MEMBER_CHECKOUT_BYTE (BLOB_SPRITE + SPRITE_X)
+	MEMBER_SUCK_BYTE (BLOB_SPRITE + SPRITE_X)
 	dec a
-	MEMBER_CHECKIN_BYTE
+	MEMBER_SPIT_BYTE
 
 	ret
 
@@ -275,7 +277,5 @@ Blob_UpdateProcess::
 	pop af
 	cp DISPLAY_B - BLOB_H
 	call z, faceUp
-
-	call Blob_PlayReel
 
 	YIELD Blob_DrawProcess
