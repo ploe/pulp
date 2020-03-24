@@ -92,14 +92,13 @@ Blob_PlayReel::
 	; Reset interval
 	pop hl
 	xor a
-	ld de, BLOB_INTERVAL
-	call Kernel_MemberPokeByte
+	MEMBER_POKE_BYTE (BLOB_INTERVAL)
 
 	; Push This to stack
 	push hl
 
 	; Put the value of BLOB_FRAME in BC
-	MEMBER_PEEK_WORD BLOB_FRAME
+	MEMBER_PEEK_WORD (BLOB_FRAME)
 	ld h, b
 	ld l, c
 
@@ -111,8 +110,7 @@ Blob_PlayReel::
 
 	; Pop This and store new frame
 	pop hl
-	ld de, BLOB_FRAME
-	call Kernel_MemberPokeWord
+	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	; Load the Duration of the new frame
 	ld h, b
@@ -124,14 +122,13 @@ Blob_PlayReel::
 	ret nz
 
 	; Get the address of the next reel to play and save it
-	MEMBER_PEEK_WORD REEL_NEXT
+	MEMBER_PEEK_WORD (REEL_NEXT)
 	push bc
 
 	; Set this->frame to the next reel
 	call Process_GetThisData
 	pop bc
-	ld de, BLOB_FRAME
-	call Kernel_MemberPokeWord
+	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	ret
 
@@ -168,7 +165,7 @@ Blob_Init::
 Blob_DrawProcess:
 	; Get This and push it to the stack
 	call Blob_PlayReel
-	
+
 	call Process_GetThisData
 	push hl
 
@@ -179,9 +176,9 @@ Blob_DrawProcess:
 
 	; Get the CLIP and set TILE on this
 	MEMBER_PEEK_BYTE REEL_FRAME_CLIP
+
 	pop hl
-	ld de, BLOB_SPRITE + SPRITE_TILE
-	call Kernel_MemberPokeByte
+	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_TILE)
 
 	; Set Source to this
 	ld d, h
@@ -248,8 +245,7 @@ faceDown:
 	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
 
 	ld bc, BLOB_REEL_DOWN
-	ld de, BLOB_FRAME
-	call Kernel_MemberPokeWord
+	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	ret
 
@@ -257,8 +253,7 @@ faceUp:
 	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
 
 	ld bc, BLOB_REEL_UP
-	ld de, BLOB_FRAME
-	call Kernel_MemberPokeWord
+	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	ret
 

@@ -62,48 +62,6 @@ Kernel_PokeWord::
 
 	ret
 
-Kernel_MemberPokeWord::
-; Sets Data->Member to Value and returns Data in HL
-; hl <~> Data address
-; de ~> Member offset
-; bc ~> Value
-
-	; Preserve Data address
-	push hl
-
-	; Add Member offset to Data address
-	add hl, de
-
-	; Load Value in to Data->Member
-	ld [hl], c
-	inc hl
-	ld [hl], b
-
-	; Reset HL to what it started as
-	pop hl
-
-	ret
-
-Kernel_MemberPokeByte::
-; Sets Data->Member to Value and returns Data in HL
-; hl <~> Data address
-; de ~> Member offset
-; a  ~> Value
-
-	; Preserve Data address
-	push hl
-
-	; Add Member offset to Data address
-	add hl, de
-
-	; Load Value in to Data->Member
-	ld [hl], a
-
-	; Reset HL to what it started as
-	pop hl
-
-	ret
-
 Kernel_MemCpy::
 ; Copies num number of bytes from source to destination
 ; bc ~> num
@@ -165,14 +123,14 @@ Kernel_Init::
 	call Display_Init
 	call Sound_Init
 
-	BLOB_SPAWN $11, $11, BLOB_CLIP_DOWN, %00000000, BLOB_REEL_DOWN
-	BLOB_SPAWN $33, $33, BLOB_CLIP_DOWN, %00000001, BLOB_REEL_DOWN
-	BLOB_SPAWN $55, $55, BLOB_CLIP_DOWN, %00000000, BLOB_REEL_DOWN
-	BLOB_SPAWN $77, $77, BLOB_CLIP_DOWN, %00000000, BLOB_REEL_DOWN
-	BLOB_SPAWN $11, $88, BLOB_CLIP_DOWN, %00000000, BLOB_REEL_DOWN
-	BLOB_SPAWN $33, $66, BLOB_CLIP_DOWN, %00000000, BLOB_REEL_DOWN
-	BLOB_SPAWN $55, $44, BLOB_CLIP_DOWN, %00000000, BLOB_REEL_DOWN
-	BLOB_SPAWN $77, $22, BLOB_CLIP_DOWN, %00000000, BLOB_REEL_DOWN
+	BLOB_SPAWN $11, $11, %00000000, BLOB_REEL_DOWN
+	BLOB_SPAWN $33, $33, %00000001, BLOB_REEL_DOWN
+	BLOB_SPAWN $55, $55, %00000000, BLOB_REEL_DOWN
+	BLOB_SPAWN $77, $77, %00000000, BLOB_REEL_DOWN
+	BLOB_SPAWN $11, $88, %00000000, BLOB_REEL_DOWN
+	BLOB_SPAWN $33, $66, %00000000, BLOB_REEL_DOWN
+	BLOB_SPAWN $55, $44, %00000000, BLOB_REEL_DOWN
+	BLOB_SPAWN $77, $22, %00000000, BLOB_REEL_DOWN
 
 	;BLOB_SPAWN $22, $22, BLOB_CLIP_UP, %00000001
 	;BLOB_SPAWN $44, $44, BLOB_CLIP_UP, %00000001

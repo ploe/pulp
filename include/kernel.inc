@@ -46,16 +46,32 @@ MEMSET: MACRO
 	ENDM
 
 MEMBER_SUCK_BYTE: MACRO
+; Get the Value in Data->Member, called before with MEMBER_SPIT_BYTE
+; hl ~> Data
+; \1 ~> Member
+
+	; Preserve data address
 	push hl
 
+	; Add Member offset to Data address
 	ld de, \1
 	add hl, de
+
+	; Load Value from Data->Member
 	ld a, [hl]
 
 	ENDM
 
 MEMBER_SPIT_BYTE: MACRO
+; Set the value in Data->Member, called after with MEMBER_SUCK_BYTE
+; hl ~> Data->Member
+; a  ~> Value
+; hl <~ Data
+
+	; Load Value in to Data->Member
 	ld [hl], a
+
+	; Reset HL to what it started as
 	pop hl
 
 	ENDM
@@ -84,6 +100,7 @@ MEMBER_PEEK_WORD: MACRO
 ; Get the Value in Data->Member and returns Data in HL
 ; hl <~> Data
 ; \1 ~> Member
+
 	; Preserve Data address
 	push hl
 
@@ -105,23 +122,42 @@ MEMBER_POKE_BYTE: MACRO
 ; Sets Data->Member to Value and returns Data in HL
 ; hl <~> Data
 ; \1 ~> Member
-; \2 ~> Value
 
+	; Preserve Data address
+	push hl
+
+	; Add Member offset to Data address
 	ld de, \1
-	ld a, \2
-	call Kernel_MemberPokeByte
+	add hl, de
+
+	; Load Value in to Data->Member
+	ld [hl], a
+
+	; Reset HL to what it started as
+	pop hl
 
 	ENDM
 
 MEMBER_POKE_WORD: MACRO
 ; Sets Data->Member to Value and returns Data in HL
 ; hl <~> Data
+; bc ~> Data
 ; \1 ~> Member
-; \2 ~> Value
 
+	; Preserve Data address
+	push hl
+
+	; Add Member offset to Data address
 	ld de, \1
-	ld bc, \2
-	call Kernel_MemberPokeWord
+	add hl, de
+
+	; Load Value in to Data->Member
+	ld [hl], c
+	inc hl
+	ld [hl], b
+
+	; Reset HL to what it started as
+	pop hl
 
 	ENDM
 
