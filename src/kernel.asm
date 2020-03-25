@@ -132,13 +132,16 @@ Kernel_Init::
 	BLOB_SPAWN $55, $44, %00000000, BLOB_REEL_DOWN
 	BLOB_SPAWN $77, $22, %00000000, BLOB_REEL_DOWN
 
-	;BLOB_SPAWN $22, $22, BLOB_CLIP_UP, %00000001
-	;BLOB_SPAWN $44, $44, BLOB_CLIP_UP, %00000001
-	;BLOB_SPAWN $66, $66, BLOB_CLIP_UP, %00000001
-	;BLOB_SPAWN $88, $88, BLOB_CLIP_UP, %00000001
-	;BLOB_SPAWN $22, $77, BLOB_CLIP_UP, %00000001
-	;BLOB_SPAWN $44, $55, BLOB_CLIP_UP, %00000001
-	;BLOB_SPAWN $66, $33, BLOB_CLIP_UP, %00000001
+	BLOB_SPAWN $22, $22, %00000000, BLOB_REEL_UP
+	BLOB_SPAWN $44, $44, %00000001, BLOB_REEL_UP
+	BLOB_SPAWN $66, $66, %00000000, BLOB_REEL_UP
+	BLOB_SPAWN $88, $88, %00000000, BLOB_REEL_UP
+	BLOB_SPAWN $22, $77, %00000000, BLOB_REEL_UP
+	BLOB_SPAWN $44, $55, %00000000, BLOB_REEL_UP
+	BLOB_SPAWN $66, $33, %00000000, BLOB_REEL_UP
+	BLOB_SPAWN $88, $11, %00000000, BLOB_REEL_UP
+
+
 	;BLOB_SPAWN $88, $11, BLOB_CLIP_UP, %00000001
 
 	call Display_Start
@@ -148,13 +151,13 @@ Kernel_Init::
 Kernel_Main::
 ; The main heartbeat of the program, waits for the vblank interrupt and kicks
 ; off each method
-.wait
+.halt
 	halt
 
 	; was it a v-blank interrupt?
 	ld a, [Kernel_WaitingForVblank]
 	and a
-	jr nz, .wait
+	jr nz, .halt
 
 	; set v-blank to wait again
 	ld a, 1
@@ -169,7 +172,7 @@ Kernel_Main::
 	call Process_PipelineDraw
 
 	; and around we go again...
-	jp Kernel_Main
+	jr .halt
 
 SECTION "Kernel V-Blank Interrupt", ROM0[$40]
 	; stop waiting for v-blank
