@@ -13,9 +13,8 @@ SECTION "Process ROM0", ROM0
 Process_Init::
 ; Set the Top to the start of PROCESS_SPACE
 
-	ld hl, Process_Top
 	ld bc, PROCESS_SPACE
-	call Kernel_PokeWord
+	POKE_WORD (Process_Top)
 
 	ret
 
@@ -23,8 +22,7 @@ Process_GetThisData::
 ; Get the start of the Data for the current Process
 ; hl <~ PROCESS_DATA
 
-	ld hl, Process_This
-	call Kernel_PeekWord
+	PEEK_WORD (Process_This)
 	ld h, b
 	ld l, c
 
@@ -41,16 +39,14 @@ Process_PipelineUpdate::
 ; Iterate over the Processes and call their Update methods
 
 	; Get the first Process address, and push it to the stack
-	ld hl, Process_Top
-	call Kernel_PeekWord
+	PEEK_WORD (Process_Top)
 	push bc
 
 Process_Pipeline_Next:
 ; Run the next Process in the Pipeline
 
 	; Set Process_This to the Process we're about to execute
-	ld hl, Process_This
-	call Kernel_PokeWord
+	POKE_WORD (Process_This)
 
 	; Get the address of Method
 	ld h, b
@@ -88,8 +84,8 @@ Process_Alloc::
 ; DE <~ Size
 ; Put the value of Top in HL and push to the stack
 
-	ld hl, Process_Top
-	call Kernel_PeekWord
+	; Get the old Top and push it to the stack
+	PEEK_WORD (Process_Top)
 	push bc
 	ld h, b
 	ld l, c
@@ -104,17 +100,12 @@ Process_Alloc::
 	ld c, l
 
 	; Set Top to the new Top
-	ld hl, Process_Top
-	call Kernel_PokeWord
-
-	; Get the address of Next in the new Top
-	ld h, b
-	ld l, c
-	ld bc, PROCESS_NEXT
-	add hl, bc
+	POKE_WORD (Process_Top)
 
 	; Load the old Top in to the new Top's next
+	ld h, b
+	ld l, c
 	pop bc
-	call Kernel_PokeWord
+	MEMBER_POKE_WORD (PROCESS_NEXT)
 
 	ret

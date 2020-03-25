@@ -142,8 +142,7 @@ Blob_Init::
 	call Process_Alloc
 
 	; Put the address of Blob process address in HL and push to stack
-	ld hl, Process_Top
-	call Kernel_PeekWord
+	PEEK_WORD Process_Top
 	ld h, b
 	ld l, c
 	push hl

@@ -29,9 +29,8 @@ OBP0_DEFAULT EQU %11010000
 
 Oam_Reset::
 ; Set Oam_Top to the start of the Oam_Sprite_Buffer
-	ld hl, Oam_Top
 	ld bc, Oam_Sprite_Buffer
-	call Kernel_PokeWord
+	POKE_WORD Oam_Top
 
 	ret
 
@@ -41,8 +40,7 @@ Oam_Request::
 	ld de, Oam_Request_Buffer
 
 	; load HL with value of OAM Top and push it to the stack
-	ld hl, Oam_Top
-	call Kernel_PeekWord
+	PEEK_WORD (Oam_Top)
 	push bc
 	ld h, b
 	ld l, c
@@ -61,8 +59,7 @@ Oam_Request::
 	ld c, l
 
 	; Set Oam_Top to the new value
-	ld hl, Oam_Top
-	call Kernel_PokeWord
+	POKE_WORD (Oam_Top)
 
 	ret
 

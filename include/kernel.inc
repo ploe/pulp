@@ -45,6 +45,36 @@ MEMSET: MACRO
 
 	ENDM
 
+PEEK_WORD: MACRO
+; Get Value in Address
+; \1 ~> Address
+; bc <~ Value
+
+	; Load address
+	ld hl, \1
+
+	; Get Value
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+
+	ENDM
+
+POKE_WORD: MACRO
+; Put Value in Address
+; \1 ~> Address
+; bc ~> Value
+
+	; Load address
+	ld hl, \1
+
+	; Load Value in to Data->Member
+	ld [hl], c
+	inc hl
+	ld [hl], b
+
+	ENDM
+
 ; INDEX macros do not preserve the address in HL
 
 INDEX_PEEK_WORD: MACRO

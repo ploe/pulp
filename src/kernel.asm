@@ -40,28 +40,6 @@ Kernel_SubWord::
 
 	ret
 
-Kernel_PeekWord::
-; Gets the word value from source
-; hl ~> source
-; bc <~ value
-
-	ld c, [hl]
-	inc hl
-	ld b, [hl]
-
-	ret
-
-Kernel_PokeWord::
-; Sets destination to value
-; destination <~ hl
-; value <~ bc
-
-	ld [hl], c
-	inc hl
-	ld [hl], b
-
-	ret
-
 Kernel_MemCpy::
 ; Copies num number of bytes from source to destination
 ; bc ~> num
