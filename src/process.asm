@@ -26,8 +26,8 @@ Process_GetThisData::
 	ld h, b
 	ld l, c
 
-	ld bc, PROCESS_DATA
-	add hl, bc
+;	ld bc, PROCESS_DATA
+;	add hl, bc
 
 	ret
 
@@ -53,7 +53,7 @@ Process_Pipeline_Next:
 	ld l, c
 
 	; Get the value of Method in HL and jump to it
-	MEMBER_PEEK_WORD (PROCESS_METHOD)
+	INDEX_PEEK_WORD (PROCESS_METHOD)
 	ld h, b
 	ld l, c
 	jp hl

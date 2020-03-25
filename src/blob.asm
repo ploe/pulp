@@ -65,11 +65,11 @@ Blob_PlayReel::
 	push hl
 
 	; get the Frame Address
-	MEMBER_PEEK_WORD BLOB_FRAME
+	MEMBER_PEEK_WORD (BLOB_FRAME)
 	push bc
 
 	; Get the current interval and put it in B
-	MEMBER_PEEK_BYTE BLOB_INTERVAL
+	MEMBER_PEEK_BYTE (BLOB_INTERVAL)
 	ld b, a
 
 	; Get the Duration value from Frame address
@@ -138,11 +138,11 @@ Blob_Init::
 ; hl <~ Address of new Blob
 
 	; Allocate our process
-	ld de, BLOB_SIZE + PROCESS_SIZE
+	ld de, (BLOB_SIZE)
 	call Process_Alloc
 
 	; Put the address of Blob process address in HL and push to stack
-	PEEK_WORD Process_Top
+	PEEK_WORD (Process_Top)
 	ld h, b
 	ld l, c
 	push hl
@@ -153,11 +153,6 @@ Blob_Init::
 
 	; Load in the SPRITE_SHEET
 	MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
-
-	; Get the address of the new Blob and leave it in HL
-	pop hl
-	ld bc, PROCESS_SIZE
-	add hl, bc
 
 	ret
 
@@ -179,7 +174,8 @@ Blob_DrawProcess:
 	pop hl
 	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_TILE)
 
-	; Set Source to This
+	; Set Source to This->SPRITE
+	INDEX_ADDRESS (BLOB_SPRITE)
 	ld d, h
 	ld e, l
 
@@ -260,7 +256,7 @@ Blob_UpdateProcess::
 	call Process_GetThisData
 
 	; Get BLOB_Y
-	MEMBER_PEEK_BYTE BLOB_SPRITE + SPRITE_Y
+	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_Y)
 	push af
 
 	; If at top of the display faceDown

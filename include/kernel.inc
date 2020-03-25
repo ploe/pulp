@@ -77,6 +77,17 @@ POKE_WORD: MACRO
 
 ; INDEX macros do not preserve the address in HL
 
+INDEX_ADDRESS: MACRO
+; Get Data->Member
+; \1 ~> Member
+; hl ~> Data
+; hl <~ Data->Member
+	; Add Member offset to Data address
+	ld de, \1
+	add hl, de
+
+	ENDM
+
 INDEX_PEEK_WORD: MACRO
 ; Get the Value in Data->Member and returns Data in HL
 ; hl <~> Data
