@@ -57,7 +57,7 @@ Process_Pipeline_Next:
 	ld l, c
 
 	; Get the value of Method in HL and jump to it
-	call Kernel_PeekWord
+	MEMBER_PEEK_WORD (PROCESS_METHOD)
 	ld h, b
 	ld l, c
 	jp hl
@@ -65,14 +65,10 @@ Process_Pipeline_Yield::
 	; Write the new Method callback in BC to PROCESS_METHOD
 
 	pop hl
-	push hl
-	call Kernel_PokeWord
+	MEMBER_POKE_WORD (PROCESS_METHOD)
 
 	; Get the address of the next Process and put it in BC and push to stack
-	pop hl
-	ld bc, PROCESS_NEXT
-	add hl, bc
-	call Kernel_PeekWord
+	MEMBER_PEEK_WORD (PROCESS_NEXT)
 	push bc
 
 	; Check to see if Next is the end of PROCESS_SPACE

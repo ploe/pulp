@@ -150,7 +150,7 @@ Blob_Init::
 
 	; Set the Method for the Blob process to Blob_DrawProcess
 	ld bc, Blob_DrawProcess
-	call Kernel_PokeWord
+	MEMBER_POKE_WORD (PROCESS_METHOD)
 
 	; Load in the SPRITE_SHEET
 	MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
