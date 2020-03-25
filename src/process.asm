@@ -52,7 +52,7 @@ Process_Pipeline_Next:
 	ld hl, Process_This
 	call Kernel_PokeWord
 
-	; Get the address of Method, the first element of the PROCESS struct
+	; Get the address of Method
 	ld h, b
 	ld l, c
 

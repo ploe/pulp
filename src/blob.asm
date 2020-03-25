@@ -170,17 +170,17 @@ Blob_DrawProcess:
 	push hl
 
 	; Put the current frame in HL
-	MEMBER_PEEK_WORD BLOB_FRAME
+	MEMBER_PEEK_WORD (BLOB_FRAME)
 	ld h, b
 	ld l, c
 
 	; Get the CLIP and set TILE on this
-	MEMBER_PEEK_BYTE REEL_FRAME_CLIP
+	INDEX_PEEK_BYTE (REEL_FRAME_CLIP)
 
 	pop hl
 	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_TILE)
 
-	; Set Source to this
+	; Set Source to This
 	ld d, h
 	ld e, l
 

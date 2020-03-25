@@ -45,6 +45,74 @@ MEMSET: MACRO
 
 	ENDM
 
+; INDEX macros do not preserve the address in HL
+
+INDEX_PEEK_WORD: MACRO
+; Get the Value in Data->Member and returns Data in HL
+; hl <~> Data
+; \1 ~> Member
+; bc <~ Value
+
+	; Add Member offset to Data address
+	ld de, \1
+	add hl, de
+
+	; Get Value from Data->Member
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+
+	ENDM
+
+INDEX_PEEK_BYTE: MACRO
+; Get the Value in Data->Member and returns Data in HL
+; hl <~> Data
+; \1 ~> Member
+; a  <~ Value
+
+	; Add Member offset to Data address
+	ld de, \1
+	add hl, de
+
+	; Load Value in to Data->Member
+	ld a, [hl]
+
+	ENDM
+
+INDEX_POKE_BYTE: MACRO
+; Sets Data->Member to Value
+; hl ~> Data
+; a  ~> Value
+; \1 ~> Member
+
+	; Add Member offset to Data address
+	ld de, \1
+	add hl, de
+
+	; Load Value in to Data->Member
+	ld [hl], a
+
+	ENDM
+
+INDEX_POKE_WORD: MACRO
+; Sets Data->Member to Value
+; hl ~> Data
+; bc ~> Value
+; \1 ~> Member
+
+	; Add Member offset to Data address
+	ld de, \1
+	add hl, de
+
+	; Load Value in to Data->Member
+	ld [hl], c
+	inc hl
+	ld [hl], b
+
+	ENDM
+
+; MEMBER macros preserve the address in HL
+
 MEMBER_SUCK_BYTE: MACRO
 ; Get the Value in Data->Member, called before with MEMBER_SPIT_BYTE
 ; hl ~> Data
@@ -80,6 +148,7 @@ MEMBER_PEEK_BYTE: MACRO
 ; Get the Value in Data->Member and returns Data in HL
 ; hl <~> Data
 ; \1 ~> Member
+; a  <~ Value
 
 	; Preserve Data address
 	push hl
@@ -100,6 +169,7 @@ MEMBER_PEEK_WORD: MACRO
 ; Get the Value in Data->Member and returns Data in HL
 ; hl <~> Data
 ; \1 ~> Member
+; bc <~ Value
 
 	; Preserve Data address
 	push hl
@@ -121,6 +191,7 @@ MEMBER_PEEK_WORD: MACRO
 MEMBER_POKE_BYTE: MACRO
 ; Sets Data->Member to Value and returns Data in HL
 ; hl <~> Data
+; a  ~> Value
 ; \1 ~> Member
 
 	; Preserve Data address
@@ -141,7 +212,7 @@ MEMBER_POKE_BYTE: MACRO
 MEMBER_POKE_WORD: MACRO
 ; Sets Data->Member to Value and returns Data in HL
 ; hl <~> Data
-; bc ~> Data
+; bc ~> Value
 ; \1 ~> Member
 
 	; Preserve Data address
