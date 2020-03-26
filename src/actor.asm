@@ -7,52 +7,55 @@ SECTION "Actor WRAM Data", WRAM0
 
 Actor_Top:: dw
 Actor_This:: dw
+Actor_Signal:: dw
 
 SECTION "Actor ROM0", ROM0
 
-Actor_PipelineDraw::
-; Iterate over the Actors and call their Draw Methods
-Actor_PipelineMove::
-; Iterate over the Actors and call their Move Methods
-Actor_PipelineUpdate::
-; Iterate over the Actors and call their Update methods
-
-	; Get the first Actor address, and push it to the stack
-	PEEK_WORD (Actor_Top)
+Actor_Broadcast::
 	push bc
+	PEEK_WORD (Actor_Top)
+	POKE_WORD (Actor_This)
+	ld h, b
+	ld l, c
+
 
 Actor_Pipeline_Next:
-; Run the next Actor in the Pipeline
 
-	; Set Actor_This to the Actor we're about to execute
-	POKE_WORD (Actor_This)
-
-	; Get the address of Method
+	; Add the Signal to the type to get to correct callback
+	MEMBER_PEEK_WORD (ACTOR_TYPE)
 	ld h, b
 	ld l, c
+	pop de
+	add hl, de
 
-	; Get the value of Method in HL and jump to it
-	INDEX_PEEK_WORD (ACTOR_METHOD)
-	ld h, b
-	ld l, c
-	jp hl
-Actor_Pipeline_Yield::
-	; Write the new Method callback in BC to ACTOR_METHOD
+	; Put the callback in BC
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
 
-	pop hl
-	MEMBER_POKE_WORD (ACTOR_METHOD)
-
-	; Get the address of the next Actor and put it in BC and push to stack
-	MEMBER_PEEK_WORD (ACTOR_NEXT)
-	push bc
-
-	; If Next is not zero, then we do iterate again
+	; If the callback is not set, jump to yield
 	ld a, c
 	or b
-	jp nz, Actor_Pipeline_Next
+	jr z, .yield
 
-	; If it is, we drop it and return the loop
-	pop bc
+	; Otherwise call the callback
+	ld h, b
+	ld l, c
+
+	jp hl
+
+.yield
+Actor_Pipeline_Yield::
+	; Get the address of the next Actor and put it in BC and push to stack
+	;ACTOR_GET_THIS
+
+	; If Next is not zero, then we do iterate again
+	;MEMBER_PEEK_WORD (ACTOR_NEXT)
+	;POKE_WORD (Actor_This)
+
+	;ld a, c
+	;or b
+	;jp nz, Actor_Pipeline_Next
 
 	ret
 

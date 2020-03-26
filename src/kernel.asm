@@ -146,9 +146,16 @@ Kernel_Main::
 	call Oam_Reset
 
 	; Update the state of the game by calling the Pipeline functions
-	call Actor_PipelineMove
-	call Actor_PipelineUpdate
-	call Actor_PipelineDraw
+;	call Actor_PipelineMove
+	ld bc, ACTOR_SIGNAL_MOVE
+	call Actor_Broadcast
+;	call Actor_PipelineUpdate
+	ld bc, ACTOR_SIGNAL_UPDATE
+	call Actor_Broadcast
+;	call Actor_PipelineDraw
+	ld bc, ACTOR_SIGNAL_DRAW
+	call Actor_Broadcast
+
 
 	; and around we go again...
 	jr .halt

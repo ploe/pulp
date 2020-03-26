@@ -19,6 +19,11 @@ BLOB_VECTOR_X EQU 1
 BLOB_W EQU 8
 BLOB_H EQU 8
 
+BLOB_TYPE::
+dw Blob_MoveActor
+dw Blob_UpdateActor
+dw Blob_DrawActor
+
 BLOB_SHEET:
 INCBIN "blob.2bpp"
 BLOB_SHEET_END:
@@ -139,6 +144,9 @@ Blob_Init::
 	; Spawn our actor
 	ld de, (BLOB_SIZE)
 	call Actor_Spawn
+
+	ld bc, BLOB_TYPE
+	MEMBER_POKE_WORD (ACTOR_TYPE)
 
 	; Put the address of Blob actor address in HL and push to stack
 	PEEK_WORD (Actor_Top)
