@@ -29,19 +29,12 @@ MEMCPY: MACRO
 MEMSET: MACRO
 	; for amount of bytes in size at destination set them to the value of value
 	; calls Kernel_MemSet
-	push bc
-	push de
-	push hl
 
 	ld hl, \1 ; destination
-	ld d, \2	; value
-	ld bc, \3 ; size
+	ld c, \2	; value
+	ld de, \3 ; size
 
 	call Kernel_MemSet
-
-	pop hl
-	pop de
-	pop bc
 
 	ENDM
 
