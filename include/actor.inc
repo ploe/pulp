@@ -11,6 +11,15 @@ ACTOR_SIZE RB 0
 
 ACTOR_SPACE EQU $E000
 
+ACTOR_GET_THIS: MACRO
+; Get the Data for the current Actor
+; hl <~ This
+	PEEK_WORD (Actor_This)
+	ld h, b
+	ld l, c
+
+	ENDM
+
 YIELD: MACRO
 	ld bc, \1
 	jp Actor_Pipeline_Yield

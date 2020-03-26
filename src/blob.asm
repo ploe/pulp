@@ -61,7 +61,7 @@ BLOB_REEL_UP::
 
 Blob_PlayReel::
 	; Push This to the stack
-	call Actor_GetThisData
+	ACTOR_GET_THIS
 	push hl
 
 	; get the Frame Address
@@ -126,12 +126,11 @@ Blob_PlayReel::
 	push bc
 
 	; Set this->frame to the next reel
-	call Actor_GetThisData
+	ACTOR_GET_THIS
 	pop bc
 	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	ret
-
 
 Blob_Init::
 ; Setup a Blob actor
@@ -159,7 +158,7 @@ Blob_DrawActor:
 	; Get This and push it to the stack
 	call Blob_PlayReel
 
-	call Actor_GetThisData
+	ACTOR_GET_THIS
 	push hl
 
 	; Put the current frame in HL
@@ -221,7 +220,7 @@ moveRight:
 	ret
 
 Blob_MoveActor:
-	call Actor_GetThisData
+	ACTOR_GET_THIS
 
 	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_Y
 
@@ -252,7 +251,7 @@ faceUp:
 	ret
 
 Blob_UpdateActor::
-	call Actor_GetThisData
+	ACTOR_GET_THIS
 
 	; Get BLOB_Y
 	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_Y)

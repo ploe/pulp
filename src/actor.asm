@@ -18,16 +18,6 @@ Actor_Init::
 
 	ret
 
-Actor_GetThisData::
-; Get the start of the Data for the current Actor
-; hl <~ ACTOR_DATA
-
-	PEEK_WORD (Actor_This)
-	ld h, b
-	ld l, c
-
-	ret
-
 Actor_PipelineDraw::
 ; Iterate over the Actors and call their Draw Methods
 Actor_PipelineMove::
