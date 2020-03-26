@@ -4,7 +4,7 @@ INCLUDE "hardware.inc"
 ; project libs
 INCLUDE "display.inc"
 INCLUDE "kernel.inc"
-INCLUDE "process.inc"
+INCLUDE "actor.inc"
 
 INCLUDE "blob.inc"
 
@@ -61,7 +61,7 @@ BLOB_REEL_UP::
 
 Blob_PlayReel::
 	; Push This to the stack
-	call Process_GetThisData
+	call Actor_GetThisData
 	push hl
 
 	; get the Frame Address
@@ -126,7 +126,7 @@ Blob_PlayReel::
 	push bc
 
 	; Set this->frame to the next reel
-	call Process_GetThisData
+	call Actor_GetThisData
 	pop bc
 	MEMBER_POKE_WORD (BLOB_FRAME)
 
@@ -134,33 +134,32 @@ Blob_PlayReel::
 
 
 Blob_Init::
-; Setup a Blob process
+; Setup a Blob actor
 ; hl <~ Address of new Blob
 
-	; Allocate our process
+	; Allocate our actor
 	ld de, (BLOB_SIZE)
-	call Process_Alloc
+	call Actor_Alloc
 
-	; Put the address of Blob process address in HL and push to stack
-	PEEK_WORD (Process_Top)
+	; Put the address of Blob actor address in HL and push to stack
+	PEEK_WORD (Actor_Top)
 	ld h, b
 	ld l, c
-	push hl
 
-	; Set the Method for the Blob process to Blob_DrawProcess
-	ld bc, Blob_DrawProcess
-	MEMBER_POKE_WORD (PROCESS_METHOD)
+	; Set the Method for the Blob actor to Blob_DrawActor
+	ld bc, Blob_DrawActor
+	MEMBER_POKE_WORD (ACTOR_METHOD)
 
 	; Load in the SPRITE_SHEET
 	MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
 
 	ret
 
-Blob_DrawProcess:
+Blob_DrawActor:
 	; Get This and push it to the stack
 	call Blob_PlayReel
 
-	call Process_GetThisData
+	call Actor_GetThisData
 	push hl
 
 	; Put the current frame in HL
@@ -191,7 +190,7 @@ Blob_DrawProcess:
 	call Oam_Request
 
 
-	YIELD Blob_MoveProcess
+	YIELD Blob_MoveActor
 
 moveDown:
 	MEMBER_SUCK_BYTE (BLOB_SPRITE + SPRITE_Y)
@@ -221,8 +220,8 @@ moveRight:
 
 	ret
 
-Blob_MoveProcess:
-	call Process_GetThisData
+Blob_MoveActor:
+	call Actor_GetThisData
 
 	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_Y
 
@@ -233,7 +232,7 @@ Blob_MoveProcess:
 	;call nz, moveRight
 	;call z, moveLeft
 
-	YIELD Blob_UpdateProcess
+	YIELD Blob_UpdateActor
 
 
 faceDown:
@@ -252,8 +251,8 @@ faceUp:
 
 	ret
 
-Blob_UpdateProcess::
-	call Process_GetThisData
+Blob_UpdateActor::
+	call Actor_GetThisData
 
 	; Get BLOB_Y
 	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_Y)
@@ -268,4 +267,4 @@ Blob_UpdateProcess::
 	cp DISPLAY_B - BLOB_H
 	call z, faceUp
 
-	YIELD Blob_DrawProcess
+	YIELD Blob_DrawActor

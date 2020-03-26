@@ -1,7 +1,7 @@
 INCLUDE "hardware.inc"
 
 INCLUDE "kernel.inc"
-INCLUDE "process.inc"
+INCLUDE "actor.inc"
 
 INCLUDE "display.inc"
 INCLUDE "blob.inc" ; shouldn't really be here
@@ -95,7 +95,7 @@ Kernel_Init::
 	; wipe RAM
 	MEMSET _RAM, 0, $E000-$C000
 
-	call Process_Init
+	call Actor_Init
 
 	; set-up each of the hardware subsystems
 	call Display_Init
@@ -145,9 +145,9 @@ Kernel_Main::
 	call Oam_Reset
 
 	; Update the state of the game by calling the Pipeline functions
-	call Process_PipelineMove
-	call Process_PipelineUpdate
-	call Process_PipelineDraw
+	call Actor_PipelineMove
+	call Actor_PipelineUpdate
+	call Actor_PipelineDraw
 
 	; and around we go again...
 	jr .halt
