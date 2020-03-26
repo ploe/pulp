@@ -10,14 +10,6 @@ Actor_This:: dw
 
 SECTION "Actor ROM0", ROM0
 
-Actor_Init::
-; Set the Top to the start of ACTOR_SPACE
-
-	ld bc, ACTOR_SPACE
-	POKE_WORD (Actor_Top)
-
-	ret
-
 Actor_PipelineDraw::
 ; Iterate over the Actors and call their Draw Methods
 Actor_PipelineMove::
@@ -54,12 +46,9 @@ Actor_Pipeline_Yield::
 	MEMBER_PEEK_WORD (ACTOR_NEXT)
 	push bc
 
-	; Check to see if Next is the end of ACTOR_SPACE
-	; BC is already set for the Actor_Do_Again
-	ld hl, ACTOR_SPACE
-	call Kernel_SubWord
-	ld a, h
-	or l
+	; If Next is not zero, then we do iterate again
+	ld a, c
+	or b
 	jp nz, Actor_Pipeline_Next
 
 	; If it is, we drop it and return the loop
@@ -67,13 +56,24 @@ Actor_Pipeline_Yield::
 
 	ret
 
-Actor_Alloc::
+Actor_Spawn::
 ; DE <~ Size
 ; Put the value of Top in HL and push to the stack
 
 	; Get the old Top and push it to the stack
 	PEEK_WORD (Actor_Top)
 	push bc
+
+	; If the Top is empty
+	ld a, c
+	or b
+	jr nz, .continue
+
+	; then start at ACTOR_SPACE_START
+	ld bc, ACTOR_SPACE_START
+
+.continue
+	; Put Top in HL
 	ld h, b
 	ld l, c
 

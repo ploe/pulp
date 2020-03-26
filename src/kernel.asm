@@ -95,8 +95,6 @@ Kernel_Init::
 	; wipe RAM
 	MEMSET _RAM, 0, $E000-$C000
 
-	call Actor_Init
-
 	; set-up each of the hardware subsystems
 	call Display_Init
 	call Sound_Init
@@ -118,9 +116,6 @@ Kernel_Init::
 	BLOB_SPAWN $44, $55, %00000000, BLOB_REEL_UP
 	BLOB_SPAWN $66, $33, %00000000, BLOB_REEL_UP
 	BLOB_SPAWN $88, $11, %00000000, BLOB_REEL_UP
-
-
-	;BLOB_SPAWN $88, $11, BLOB_CLIP_UP, %00000001
 
 	call Display_Start
 

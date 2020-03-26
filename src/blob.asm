@@ -136,9 +136,9 @@ Blob_Init::
 ; Setup a Blob actor
 ; hl <~ Address of new Blob
 
-	; Allocate our actor
+	; Spawn our actor
 	ld de, (BLOB_SIZE)
-	call Actor_Alloc
+	call Actor_Spawn
 
 	; Put the address of Blob actor address in HL and push to stack
 	PEEK_WORD (Actor_Top)
