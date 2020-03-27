@@ -66,7 +66,6 @@ BLOB_REEL_UP::
 
 Blob_PlayReel::
 	; Push This to the stack
-	ACTOR_GET_THIS
 	push hl
 
 	; get the Frame Address
@@ -153,74 +152,76 @@ Blob_Init::
 	ld h, b
 	ld l, c
 
-	; Set the Method for the Blob actor to Blob_DrawActor
-	ld bc, Blob_DrawActor
-	MEMBER_POKE_WORD (ACTOR_METHOD)
-
 	; Load in the SPRITE_SHEET
 	MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
 
 	ret
 
 Blob_DrawActor:
-	; Get This and push it to the stack
+	ACTOR_GET_THIS
+
 	call Blob_PlayReel
 
-	ACTOR_GET_THIS
-	push hl
+	; Request Sprite from OAM
+	ld de, 1
+	call Oam_Request
+	push bc
 
-	; Put the current frame in HL
+	; SET OAM_BUFFER to response
+	ACTOR_GET_THIS
+	pop bc
+
+	MEMBER_POKE_WORD (BLOB_OAM_BUFFER)
+
+	MEMBER_PEEK_WORD (BLOB_OFFSET)
+	push bc
+
+	; Put the current frame in HL, push This to stack
 	MEMBER_PEEK_WORD (BLOB_FRAME)
 	ld h, b
 	ld l, c
 
-	; Get the CLIP and set TILE on this
+	; Get the CLIP
 	INDEX_PEEK_BYTE (REEL_FRAME_CLIP)
 
-	pop hl
-	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_TILE)
+	; Put address OAM_BUFFER in HL
+	ACTOR_GET_THIS
+	INDEX_PEEK_WORD (BLOB_OAM_BUFFER)
+	ld h, b
+	ld l, c
 
-	; Set Source to This->SPRITE
-	INDEX_ADDRESS (BLOB_SPRITE)
-	ld d, h
-	ld e, l
+	; Set TILE to CLIP
+	MEMBER_POKE_BYTE (SPRITE_TILE)
 
-	; Set Size
-	ld bc, SPRITE_SIZE
-
-	; Set Destination
-	ld hl, Oam_Request_Buffer
-
-	; Fire Memcpy to put the data in the OAM Buffer
-	call Kernel_MemCpy
-
-	call Oam_Request
+	; Set X and Y to OFFSET
+	pop bc
+	MEMBER_POKE_WORD (SPRITE_OFFSET)
 
 	YIELD
 
 moveDown:
-	MEMBER_SUCK_BYTE (BLOB_SPRITE + SPRITE_Y)
+	MEMBER_SUCK_BYTE (BLOB_Y)
 	inc a
 	MEMBER_SPIT_BYTE
 
 	ret
 
 moveUp:
-	MEMBER_SUCK_BYTE (BLOB_SPRITE + SPRITE_Y)
+	MEMBER_SUCK_BYTE (BLOB_Y)
 	dec a
 	MEMBER_SPIT_BYTE
 
 	ret
 
 moveLeft:
-	MEMBER_SUCK_BYTE (BLOB_SPRITE + SPRITE_X)
+	MEMBER_SUCK_BYTE (BLOB_X)
 	inc a
 	MEMBER_SPIT_BYTE
 
 	ret
 
 moveRight:
-	MEMBER_SUCK_BYTE (BLOB_SPRITE + SPRITE_X)
+	MEMBER_SUCK_BYTE (BLOB_X)
 	dec a
 	MEMBER_SPIT_BYTE
 
@@ -261,7 +262,7 @@ Blob_UpdateActor::
 	ACTOR_GET_THIS
 
 	; Get BLOB_Y
-	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_Y)
+	MEMBER_PEEK_BYTE (BLOB_Y)
 	push af
 
 	; If at top of the display faceDown

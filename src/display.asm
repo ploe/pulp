@@ -30,36 +30,40 @@ OBP0_DEFAULT EQU %11010000
 Oam_Reset::
 ; Set Oam_Top to the start of the Oam_Sprite_Buffer
 	ld bc, Oam_Sprite_Buffer
-	POKE_WORD Oam_Top
-
+	POKE_WORD (Oam_Top)
+	
 	ret
 
 Oam_Request::
-; Set the Oam_Sprite_Buffer using the Oam_Request_Buffer
-	; Load DE with the address of Request_Buffer
-	ld de, Oam_Request_Buffer
+; Request Sprites from Oam_Sprite_Buffer
+; de ~> Size
+; bc <~ Oam_Top
 
-	; load HL with value of OAM Top and push it to the stack
+	; Put Oam_Top in HL and push to stack
 	PEEK_WORD (Oam_Top)
 	push bc
 	ld h, b
 	ld l, c
 
-	; Has to be the size of the Sprite
 	ld bc, SPRITE_SIZE
 
-	; Move the requested Sprite in to the Oam_Sprite_Buffer
-	call Kernel_MemCpy
-
-	; calculate the next Oam_Top and set BC to it
-	pop hl
-	ld bc, SPRITE_SIZE
+.next
+	; Advance the buffer
 	add hl, bc
+
+	; Until zero
+	dec de
+	ld a, e
+	or d
+	jr nz, .next
+
+	; Load the new Oam_Top
 	ld b, h
 	ld c, l
-
-	; Set Oam_Top to the new value
 	POKE_WORD (Oam_Top)
+
+	; Return the Sprite buffer
+	pop bc
 
 	ret
 

@@ -45,6 +45,17 @@ MEMSET: MACRO
 
 	ENDM
 
+HL_POKE_WORD: MACRO
+; Get Value in Address
+; hl ~> Address
+; bc <~ Value
+	; Load Value in to Data->Member
+	ld [hl], c
+	inc hl
+	ld [hl], b
+
+	ENDM
+
 PEEK_WORD: MACRO
 ; Get Value in Address
 ; \1 ~> Address
