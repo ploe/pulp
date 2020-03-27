@@ -7,19 +7,57 @@ SECTION "Actor WRAM Data", WRAM0
 
 Actor_Top:: dw
 Actor_This:: dw
-Actor_Signal:: dw
+Actor_Pipeline_Signal:: dw
 
 SECTION "Actor ROM0", ROM0
 
-Actor_Broadcast::
+Actor_Pipeline_Begin::
+; Call the Pipeline Method on each Actor from the Top
+; bc <~> Method signal
+; hl ~> This
+
+	; Set Actor_Pipeline_Signal
 	push bc
+	POKE_WORD (Actor_Pipeline_Signal)
+
+	; Set This to Top and put in HL
 	PEEK_WORD (Actor_Top)
 	POKE_WORD (Actor_This)
 	ld h, b
 	ld l, c
 
+	; Put Actor_Pipeline_Signal in BC
+	pop bc
 
-Actor_Pipeline_Next:
+	jp Actor_Pipeline_CallMethod
+
+Actor_Pipeline_Next::
+	ACTOR_GET_THIS
+
+
+	; If we're at the end of the Actors, we break
+	MEMBER_PEEK_WORD (ACTOR_NEXT)
+	ld a, c
+	or b
+	ret z
+
+	; Make it the new This
+	POKE_WORD (Actor_This)
+	push bc
+
+	; Put Actor_Pipeline_Signal in BC
+	PEEK_WORD (Actor_Pipeline_Signal)
+
+	; Put this in HL
+	pop hl
+
+	jp Actor_Pipeline_CallMethod
+
+Actor_Pipeline_CallMethod:
+; hl ~> This
+; bc ~> Actor_Pipeline_Signal
+	; Preserve Actor_Pipeline_Signal
+	push bc
 
 	; Add the Signal to the type to get to correct callback
 	MEMBER_PEEK_WORD (ACTOR_TYPE)
@@ -33,31 +71,16 @@ Actor_Pipeline_Next:
 	inc hl
 	ld b, [hl]
 
-	; If the callback is not set, jump to yield
+	; If the callback is not set, let's do the next Actor
 	ld a, c
 	or b
-	jr z, .yield
+	jp z, Actor_Pipeline_Next
 
 	; Otherwise call the callback
 	ld h, b
 	ld l, c
 
 	jp hl
-
-.yield
-Actor_Pipeline_Yield::
-	; Get the address of the next Actor and put it in BC and push to stack
-	;ACTOR_GET_THIS
-
-	; If Next is not zero, then we do iterate again
-	;MEMBER_PEEK_WORD (ACTOR_NEXT)
-	;POKE_WORD (Actor_This)
-
-	;ld a, c
-	;or b
-	;jp nz, Actor_Pipeline_Next
-
-	ret
 
 Actor_Spawn::
 ; DE <~ Size

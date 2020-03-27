@@ -28,9 +28,15 @@ ACTOR_GET_THIS: MACRO
 
 	ENDM
 
+PIPELINE_METHOD: MACRO
+; \1 ~> Actor_Pipeline_Signal
+	ld bc, \1
+	call Actor_Pipeline_Begin
+
+	ENDM
+
 YIELD: MACRO
-	;ld bc, \1
-	jp Actor_Pipeline_Yield
+	jp Actor_Pipeline_Next
 	ENDM
 
 ENDC

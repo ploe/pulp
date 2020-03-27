@@ -196,8 +196,7 @@ Blob_DrawActor:
 
 	call Oam_Request
 
-
-	YIELD Blob_MoveActor
+	YIELD
 
 moveDown:
 	MEMBER_SUCK_BYTE (BLOB_SPRITE + SPRITE_Y)
@@ -239,7 +238,7 @@ Blob_MoveActor:
 	;call nz, moveRight
 	;call z, moveLeft
 
-	YIELD Blob_UpdateActor
+	YIELD
 
 
 faceDown:
@@ -274,4 +273,4 @@ Blob_UpdateActor::
 	cp DISPLAY_B - BLOB_H
 	call z, faceUp
 
-	YIELD Blob_DrawActor
+	YIELD
