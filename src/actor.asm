@@ -92,15 +92,9 @@ Actor_Spawn::
 	; Set Top to the new Top
 	POKE_WORD (Actor_Top)
 
-	; Put new Top in HL
+	; Load the old Top in to the new Top's next
 	ld h, b
 	ld l, c
-
-	; Set all the data to 0
-	ld c, 0
-	call Kernel_MemSet
-
-	; Set NEXT to the old Top
 	pop bc
 	MEMBER_POKE_WORD (ACTOR_NEXT)
 

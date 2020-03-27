@@ -63,25 +63,19 @@ Kernel_MemCpy::
 Kernel_MemSet::
 ; For amount of bytes in size at destination set them to the value of value
 ; hl ~> destination
-; c  ~> value
-; de ~> size
-
-	push de
-	push hl
+; d  ~> value
+; bc ~> size
 
 .next_byte
 	; fetch what we have in value and set it in destination
-	ld a, c
+	ld a, d
 	ld [hli], a
-	dec de
+	dec bc
 
 	; loop until size is 0
-	ld a, d
-	or e
+	ld a, b
+	or c
 	jr nz, .next_byte
-
-	pop hl
-	pop de
 
 	ret
 
