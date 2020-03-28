@@ -141,11 +141,7 @@ Kernel_Main::
 
 	; Update the state of the game by calling the Pipeline functions
 	PIPELINE_METHOD ACTOR_SIGNAL_MOVE
-
-	PIPELINE_METHOD ACTOR_SIGNAL_UPDATE
-
 	PIPELINE_METHOD ACTOR_SIGNAL_DRAW
-
 
 	; and around we go again...
 	jr .halt

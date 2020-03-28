@@ -13,7 +13,6 @@ SECTION "Display WRAM Data", WRAM0[$C000]
 ; Oam_Sprite_Buffer needs to be aligned with $XX00 as the built-in DMA reads
 ; from there to $XX9F
 Oam_Sprite_Buffer:: ds SPRITE_SIZE * OAM_LIMIT
-Oam_Request_Buffer:: ds OAM_REQUEST_SIZE
 Oam_Top:: dw
 
 SECTION "Display Code", ROM0
@@ -31,7 +30,7 @@ Oam_Reset::
 ; Set Oam_Top to the start of the Oam_Sprite_Buffer
 	ld bc, Oam_Sprite_Buffer
 	POKE_WORD (Oam_Top)
-	
+
 	ret
 
 Oam_Request::
@@ -45,17 +44,8 @@ Oam_Request::
 	ld h, b
 	ld l, c
 
-	ld bc, SPRITE_SIZE
-
-.next
-	; Advance the buffer
-	add hl, bc
-
-	; Until zero
-	dec de
-	ld a, e
-	or d
-	jr nz, .next
+	; Get new Oam_Top
+	add hl, de
 
 	; Load the new Oam_Top
 	ld b, h

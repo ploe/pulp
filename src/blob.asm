@@ -11,7 +11,6 @@ INCLUDE "blob.inc"
 SECTION "Blob Code", ROM0
 
 ; Flags for BLOB_VECTORS
-;BLOB_VECTOR_Y EQU %00000010
 BLOB_VECTOR_Y EQU 0
 BLOB_VECTOR_X EQU 1
 
@@ -21,7 +20,6 @@ BLOB_H EQU 8
 
 BLOB_TYPE::
 dw Blob_MoveActor
-dw Blob_UpdateActor
 dw Blob_DrawActor
 
 BLOB_SHEET:
@@ -158,13 +156,26 @@ Blob_Init::
 	ret
 
 Blob_DrawActor:
+; Sets up the Blob to be rendered
 	ACTOR_GET_THIS
+
+	; Get BLOB_Y
+	MEMBER_PEEK_BYTE (BLOB_Y)
+	push af
+
+	; If at top of the display faceDown
+	cp DISPLAY_T
+	call z, faceDown
+
+	; If at bottom of the display faceUp
+	pop af
+	cp DISPLAY_B - BLOB_H
+	call z, faceUp
 
 	call Blob_PlayReel
 
 	; Request Sprite from OAM
-	ld de, 1
-	call Oam_Request
+	OAM_REQUEST (1)
 	push bc
 
 	; SET OAM_BUFFER to response
@@ -257,21 +268,3 @@ faceUp:
 	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	ret
-
-Blob_UpdateActor::
-	ACTOR_GET_THIS
-
-	; Get BLOB_Y
-	MEMBER_PEEK_BYTE (BLOB_Y)
-	push af
-
-	; If at top of the display faceDown
-	cp DISPLAY_T
-	call z, faceDown
-
-	; If at bottom of the display faceUp
-	pop af
-	cp DISPLAY_B - BLOB_H
-	call z, faceUp
-
-	YIELD
