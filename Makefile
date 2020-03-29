@@ -13,7 +13,7 @@ clean:
 	rm -v *.o *.2bpp $(project).gb $(project).sav $(project).sym
 
 fix: $(project).gb
-	rgbfix -j -l 0x33 -m 0x1B -n 0 -p 0xFF -r 0x03 -v $(project).gb
+	rgbfix -j -l 0x33 -m 0x1B -n 0 -p 0 -r 0x03 -v $(project).gb
 
 png: blob.2bpp hero.2bpp
 

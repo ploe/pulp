@@ -159,19 +159,6 @@ Blob_DrawActor:
 ; Sets up the Blob to be rendered
 	ACTOR_GET_THIS
 
-	; Get BLOB_Y
-	MEMBER_PEEK_BYTE (BLOB_Y)
-	push af
-
-	; If at top of the display faceDown
-	cp DISPLAY_T
-	call z, faceDown
-
-	; If at bottom of the display faceUp
-	pop af
-	cp DISPLAY_B - BLOB_H
-	call z, faceUp
-
 	call Blob_PlayReel
 
 	; Request Sprite from OAM
@@ -211,6 +198,8 @@ Blob_DrawActor:
 	YIELD
 
 moveDown:
+; Static method
+; hl ~> This
 	MEMBER_SUCK_BYTE (BLOB_Y)
 	inc a
 	MEMBER_SPIT_BYTE
@@ -249,6 +238,19 @@ Blob_MoveActor:
 	;MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_X
 	;call nz, moveRight
 	;call z, moveLeft
+
+	; Get BLOB_Y
+	MEMBER_PEEK_BYTE (BLOB_Y)
+	push af
+
+	; If at top of the display faceDown
+	cp DISPLAY_T
+	call z, faceDown
+
+	; If at bottom of the display faceUp
+	pop af
+	cp DISPLAY_B - BLOB_H
+	call z, faceUp
 
 	YIELD
 
