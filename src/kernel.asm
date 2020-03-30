@@ -48,14 +48,14 @@ Kernel_MemCpy::
 
 .next_byte
 	; fetch what we have in source and copy it into destination
-	ld a, [de]
+	ld a, [bc]
 	ld [hli], a
-	inc de
-	dec bc
+	inc bc
+	dec de
 
 	; loop until num is 0
-	ld a, b
-	or c
+	ld a, e
+	or d
 	jr nz, .next_byte
 
 	ret
@@ -68,13 +68,13 @@ Kernel_MemSet::
 
 .next_byte
 	; fetch what we have in value and set it in destination
-	ld a, d
+	ld a, b
 	ld [hli], a
-	dec bc
+	dec de
 
 	; loop until size is 0
-	ld a, b
-	or c
+	ld a, e
+	or d
 	jr nz, .next_byte
 
 	ret
