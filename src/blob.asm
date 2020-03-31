@@ -65,6 +65,32 @@ BLOB_REEL_UP::
 	db REEL_SENTINEL
 	dw BLOB_REEL_UP
 
+BLOB_REEL_LEFT::
+	; Frame 1
+	db 15, BLOB_CLIP_LEFT
+	dw BLOB_SHEET
+
+	; Frame 2
+	db 15, BLOB_CLIP_LEFT + 1
+	dw BLOB_SHEET
+
+	; Go back to start
+	db REEL_SENTINEL
+	dw BLOB_REEL_LEFT
+
+BLOB_REEL_RIGHT::
+	; Frame 1
+	db 15, BLOB_CLIP_RIGHT
+	dw BLOB_SHEET
+
+	; Frame 2
+	db 15, BLOB_CLIP_RIGHT + 1
+	dw BLOB_SHEET
+
+	; Go back to start
+	db REEL_SENTINEL
+	dw BLOB_REEL_RIGHT
+
 Blob_Animate::
 	ACTOR_GET_THIS
 	; Push This to the stack
@@ -167,14 +193,11 @@ Blob_VramSetup:
 	ACTOR_GET_THIS
 	push hl
 
-	;call Blob_PlayReel
-
 	; Request Sprite from OAM
 	OAM_SPRITE_REQUEST (1)
 
 	; SET OAM_BUFFER to response
 	pop hl
-
 	MEMBER_POKE_WORD (BLOB_OAM_BUFFER)
 
 	MEMBER_PEEK_WORD (BLOB_OFFSET)
@@ -182,7 +205,7 @@ Blob_VramSetup:
 
 	; Put the current frame in HL, push This to stack
 	push hl
-	MEMBER_PEEK_WORD (BLOB_FRAME)
+	INDEX_PEEK_WORD (BLOB_FRAME)
 	ld h, b
 	ld l, c
 
@@ -242,9 +265,9 @@ Blob_Update:
 	call nz, moveUp
 	call z, moveDown
 
-	;MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_X
-	;call nz, moveRight
-	;call z, moveLeft
+	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_X
+	call nz, moveRight
+	call z, moveLeft
 
 	; Get BLOB_Y
 	MEMBER_PEEK_BYTE (BLOB_Y)
@@ -259,8 +282,34 @@ Blob_Update:
 	cp DISPLAY_B - BLOB_H
 	call z, faceUp
 
+	MEMBER_PEEK_BYTE (BLOB_X)
+	push af
+
+	cp DISPLAY_L
+	call z, faceRight
+
+	pop af
+	cp DISPLAY_R
+	call z, faceLeft
+
 	YIELD
 
+
+faceRight:
+	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_X
+
+	ld bc, BLOB_REEL_RIGHT
+	MEMBER_POKE_WORD (BLOB_FRAME)
+
+	ret
+
+faceLeft:
+	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_X
+
+	ld bc, BLOB_REEL_LEFT
+	MEMBER_POKE_WORD (BLOB_FRAME)
+
+	ret
 
 faceDown:
 	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
