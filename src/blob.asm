@@ -20,8 +20,10 @@ BLOB_W EQU 8
 BLOB_H EQU 8
 
 BLOB_TYPE::
-dw Blob_MoveActor
-dw Blob_DrawActor
+dw Blob_Update
+dw Blob_Animate
+dw Blob_VramSetup
+
 
 BLOB_SHEET:
 INCBIN "blob.2bpp"
@@ -63,7 +65,8 @@ BLOB_REEL_UP::
 	db REEL_SENTINEL
 	dw BLOB_REEL_UP
 
-Blob_PlayReel::
+Blob_Animate::
+	ACTOR_GET_THIS
 	; Push This to the stack
 	push hl
 
@@ -81,7 +84,7 @@ Blob_PlayReel::
 	cp b
 
 	; Get next frame in reel
-	jr z, .next_frame
+	jr z, .nextFrame
 
 	; Otherwise just increment the interval
 	pop hl
@@ -89,9 +92,9 @@ Blob_PlayReel::
 	add hl, de
 	inc [hl]
 
-	ret
+	YIELD
 
-.next_frame
+.nextFrame
 	; Reset interval
 	pop hl
 	xor a
@@ -122,8 +125,11 @@ Blob_PlayReel::
 	and a
 
 	; If the duration is REEL_SENTINEL we need set a new REEL
-	ret nz
+	jr z, nextReel
 
+	YIELD
+
+nextReel:
 	; Get the address of the next reel to play and save it
 	MEMBER_PEEK_WORD (REEL_NEXT)
 	push bc
@@ -133,7 +139,7 @@ Blob_PlayReel::
 	pop bc
 	MEMBER_POKE_WORD (BLOB_FRAME)
 
-	ret
+	YIELD
 
 Blob_Init::
 ; Setup a Blob actor
@@ -156,19 +162,18 @@ Blob_Init::
 
 	ret
 
-Blob_DrawActor:
+Blob_VramSetup:
 ; Sets up the Blob to be rendered
 	ACTOR_GET_THIS
+	push hl
 
-	call Blob_PlayReel
+	;call Blob_PlayReel
 
 	; Request Sprite from OAM
 	OAM_SPRITE_REQUEST (1)
-	push bc
 
 	; SET OAM_BUFFER to response
-	ACTOR_GET_THIS
-	pop bc
+	pop hl
 
 	MEMBER_POKE_WORD (BLOB_OAM_BUFFER)
 
@@ -176,6 +181,7 @@ Blob_DrawActor:
 	push bc
 
 	; Put the current frame in HL, push This to stack
+	push hl
 	MEMBER_PEEK_WORD (BLOB_FRAME)
 	ld h, b
 	ld l, c
@@ -183,8 +189,8 @@ Blob_DrawActor:
 	; Get the CLIP
 	INDEX_PEEK_BYTE (REEL_FRAME_CLIP)
 
-	; Put address OAM_BUFFER in HL
-	ACTOR_GET_THIS
+	; Pop This, and put address OAM_BUFFER in HL
+	pop hl
 	INDEX_PEEK_WORD (BLOB_OAM_BUFFER)
 	ld h, b
 	ld l, c
@@ -228,7 +234,7 @@ moveRight:
 
 	ret
 
-Blob_MoveActor:
+Blob_Update:
 	ACTOR_GET_THIS
 
 	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_Y

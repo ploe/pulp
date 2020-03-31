@@ -140,8 +140,9 @@ Kernel_Main::
 	call Oam_Reset
 
 	; Update the state of the game by calling the Pipeline functions
-	PIPELINE_METHOD ACTOR_SIGNAL_MOVE
-	PIPELINE_METHOD ACTOR_SIGNAL_DRAW
+	PIPELINE_METHOD SIGNAL_UPDATE
+	PIPELINE_METHOD SIGNAL_ANIMATE
+	PIPELINE_METHOD SIGNAL_VRAM_SETUP
 
 	; and around we go again...
 	jr .halt
