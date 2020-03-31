@@ -2,9 +2,10 @@
 INCLUDE "hardware.inc"
 
 ; project libs
+INCLUDE "actor.inc"
 INCLUDE "display.inc"
 INCLUDE "kernel.inc"
-INCLUDE "actor.inc"
+INCLUDE "oam.inc"
 
 INCLUDE "blob.inc"
 
@@ -162,7 +163,7 @@ Blob_DrawActor:
 	call Blob_PlayReel
 
 	; Request Sprite from OAM
-	OAM_REQUEST (1)
+	OAM_SPRITE_REQUEST (1)
 	push bc
 
 	; SET OAM_BUFFER to response

@@ -9,11 +9,6 @@ SECTION "Display HRAM Data", HRAM[$FF80]
 ; the built-in DMA transfer locks up ROM, and so needs putting in HRAM
 Display_DmaTransfer::
 
-SECTION "Display WRAM Data", WRAM0[$C000]
-; Oam_Sprite_Buffer needs to be aligned with $XX00 as the built-in DMA reads
-; from there to $XX9F
-Oam_Sprite_Buffer:: ds SPRITE_SIZE * OAM_LIMIT
-Oam_Top:: dw
 
 SECTION "Display Code", ROM0
 
@@ -25,37 +20,6 @@ HERO_SHEET_SIZE EQU HERO_SHEET_END-HERO_SHEET
 ; Constants
 BGP_DEFAULT EQU %11100100
 OBP0_DEFAULT EQU %11010000
-
-Oam_Reset::
-; Set Oam_Top to the start of the Oam_Sprite_Buffer
-	ld bc, Oam_Sprite_Buffer
-	POKE_WORD (Oam_Top)
-
-	ret
-
-Oam_Request::
-; Request Sprites from Oam_Sprite_Buffer
-; de ~> Size
-; bc <~ Oam_Top
-
-	; Put Oam_Top in HL and push to stack
-	PEEK_WORD (Oam_Top)
-	push bc
-	ld h, b
-	ld l, c
-
-	; Get new Oam_Top
-	add hl, de
-
-	; Load the new Oam_Top
-	ld b, h
-	ld c, l
-	POKE_WORD (Oam_Top)
-
-	; Return the Sprite buffer
-	pop bc
-
-	ret
 
 ; Methods
 Display_Init::
