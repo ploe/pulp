@@ -195,17 +195,19 @@ MEMBER_PEEK_BYTE: MACRO
 ; a  <~ Value
 
 	; Preserve Data address
-	push hl
+	ld d, h
+	ld e, l
 
 	; Add Member offset to Data address
-	ld de, \1
+	ld hl, \1
 	add hl, de
 
 	; Load Value in to Data->Member
 	ld a, [hl]
 
 	; Reset HL to what it started as
-	pop hl
+	ld h, d
+	ld l, e
 
 	ENDM
 
@@ -216,10 +218,11 @@ MEMBER_PEEK_WORD: MACRO
 ; bc <~ Value
 
 	; Preserve Data address
-	push hl
+	ld d, h
+	ld e, l
 
 	; Add Member offset to Data address
-	ld de, \1
+	ld hl, \1
 	add hl, de
 
 	; Get Value from Data->Member
@@ -228,7 +231,8 @@ MEMBER_PEEK_WORD: MACRO
 	ld b, [hl]
 
 	; Reset HL to what it started as
-	pop hl
+	ld h, d
+	ld l, e
 
 	ENDM
 
@@ -239,17 +243,19 @@ MEMBER_POKE_BYTE: MACRO
 ; \1 ~> Member
 
 	; Preserve Data address
-	push hl
+	ld d, h
+	ld e, l
 
 	; Add Member offset to Data address
-	ld de, \1
+	ld hl, \1
 	add hl, de
 
 	; Load Value in to Data->Member
 	ld [hl], a
 
 	; Reset HL to what it started as
-	pop hl
+	ld h, d
+	ld l, e
 
 	ENDM
 
@@ -260,10 +266,11 @@ MEMBER_POKE_WORD: MACRO
 ; \1 ~> Member
 
 	; Preserve Data address
-	push hl
+	ld d, h
+	ld e, l
 
 	; Add Member offset to Data address
-	ld de, \1
+	ld hl, \1
 	add hl, de
 
 	; Load Value in to Data->Member
@@ -272,7 +279,8 @@ MEMBER_POKE_WORD: MACRO
 	ld [hl], b
 
 	; Reset HL to what it started as
-	pop hl
+	ld h, d
+	ld l, e
 
 	ENDM
 
