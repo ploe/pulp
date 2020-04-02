@@ -20,7 +20,7 @@ BLOB_W EQU 8
 BLOB_H EQU 8
 
 BLOB_TYPE::
-dw Blob_Update
+dw NEW_Blob_Update
 dw NEW_Blob_Animate
 dw Blob_VramSetup
 
@@ -118,8 +118,6 @@ NEW_Blob_Animate::
 
 .nextFrame
 	; Reset Interval
-;.lock
-;	jr .lock
 
 	xor a
 	NEW_MEMBER_POKE_BYTE (BLOB_INTERVAL)
@@ -151,82 +149,6 @@ NEW_Blob_Animate::
 
 	; Put the Next Reel in Frame
 	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
-
-	YIELD
-
-Blob_Animate::
-	ACTOR_GET_THIS
-	; Push This to the stack
-	push hl
-
-	; get the Frame Address
-	MEMBER_PEEK_WORD (BLOB_FRAME)
-	push bc
-
-	; Get the current interval and put it in B
-	MEMBER_PEEK_BYTE (BLOB_INTERVAL)
-	ld b, a
-
-	; Get the Duration value from Frame address
-	pop hl
-	ld a, [hl]
-	cp b
-
-	; Get next frame in reel
-	jr z, .nextFrame
-
-	; Otherwise just increment the interval
-	pop hl
-	ld de, BLOB_INTERVAL
-	add hl, de
-	inc [hl]
-
-	YIELD
-
-.nextFrame
-	; Reset interval
-	pop hl
-	xor a
-	MEMBER_POKE_BYTE (BLOB_INTERVAL)
-
-	; Push This to stack
-	push hl
-
-	; Put the value of BLOB_FRAME in BC
-	MEMBER_PEEK_WORD (BLOB_FRAME)
-	ld h, b
-	ld l, c
-
-	; Increment to next frame and load to BC
-	ld de, REEL_FRAME_SIZE
-	add hl, de
-	ld b, h
-	ld c, l
-
-	; Pop This and store new frame
-	pop hl
-	MEMBER_POKE_WORD (BLOB_FRAME)
-
-	; Load the Duration of the new frame
-	ld h, b
-	ld l, c
-	ld a, [hl]
-	and a
-
-	; If the duration is REEL_SENTINEL we need set a new REEL
-	jr z, nextReel
-
-	YIELD
-
-nextReel:
-	; Get the address of the next reel to play and save it
-	MEMBER_PEEK_WORD (REEL_NEXT)
-	push bc
-
-	; Set this->frame to the next reel
-	ACTOR_GET_THIS
-	pop bc
-	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	YIELD
 
@@ -290,102 +212,97 @@ Blob_VramSetup:
 
 	YIELD
 
-moveDown:
-; Static method
-; hl ~> This
-	MEMBER_SUCK_BYTE (BLOB_Y)
-	inc a
-	MEMBER_SPIT_BYTE
+NEW_Blob_Update:
+; Update Pipeline Method for Blob type
+	NEW_ACTOR_GET_THIS
 
-	ret
+.getVectorY
+; Get the Vector Y and decide to moveUp or moveDown
+	NEW_MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_Y
+	jr nz, .NEW_moveUp
+	jr z, .NEW_moveDown
 
-moveUp:
-	MEMBER_SUCK_BYTE (BLOB_Y)
-	dec a
-	MEMBER_SPIT_BYTE
+.NEW_moveDown
+	MEMBER_ADDRESS (BLOB_Y)
+	inc [hl]
 
-	ret
+	jr .getVectorX
 
-moveLeft:
-	MEMBER_SUCK_BYTE (BLOB_X)
-	inc a
-	MEMBER_SPIT_BYTE
+.NEW_moveUp
+	MEMBER_ADDRESS (BLOB_Y)
+	dec [hl]
 
-	ret
+	jr .getVectorX
 
-moveRight:
-	MEMBER_SUCK_BYTE (BLOB_X)
-	dec a
-	MEMBER_SPIT_BYTE
+.getVectorX
+; Get the Vector X and decide whether to moveRight or moveLeft
+	NEW_MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_X
+	jr z, .NEW_moveRight
+	jr nz, .NEW_moveLeft
 
-	ret
+.NEW_moveLeft
+	MEMBER_ADDRESS (BLOB_X)
+	dec [hl]
 
-Blob_Update:
-	ACTOR_GET_THIS
+	jr .setFace
 
-	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_Y
+.NEW_moveRight
+	MEMBER_ADDRESS (BLOB_X)
+	inc [hl]
 
-	call nz, moveUp
-	call z, moveDown
+	jr .setFace
 
-	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_X
-	call nz, moveRight
-	call z, moveLeft
-
+.setFace
+; Change the Vector and Frame if This collides with the edge of the display
 	; Get BLOB_Y
-	MEMBER_PEEK_BYTE (BLOB_Y)
-	push af
+	NEW_MEMBER_PEEK_BYTE (BLOB_Y)
 
 	; If at top of the display faceDown
 	cp DISPLAY_T
-	call z, faceDown
+	jr z, .NEW_faceDown
 
 	; If at bottom of the display faceUp
-	pop af
 	cp DISPLAY_B - BLOB_H
-	call z, faceUp
+	jr z, .NEW_faceUp
 
-	MEMBER_PEEK_BYTE (BLOB_X)
-	push af
+	NEW_MEMBER_PEEK_BYTE (BLOB_X)
 
 	cp DISPLAY_L
-	call z, faceRight
+	jr z, .NEW_faceRight
 
-	pop af
 	cp DISPLAY_R
-	call z, faceLeft
+	jr z, .NEW_faceLeft
+
+	NEW_MEMBER_PEEK_WORD (BLOB_FRAME)
+	jr .yield
+
+.NEW_faceRight
+	NEW_MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_X
+	ld de, BLOB_REEL_RIGHT
+
+	jr .yield
+
+.NEW_faceLeft
+	NEW_MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_X
+	ld de, BLOB_REEL_LEFT
+
+	jr .yield
+
+.NEW_faceDown
+	NEW_MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
+	ld de, BLOB_REEL_DOWN
+
+	jr .yield
+
+.yield
+; Set the Frame and Yield the Update routine
+	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
 
 	YIELD
 
+.NEW_faceUp
+	NEW_MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
 
-faceRight:
-	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_X
+	ld de, BLOB_REEL_UP
 
-	ld bc, BLOB_REEL_RIGHT
-	MEMBER_POKE_WORD (BLOB_FRAME)
-
-	ret
-
-faceLeft:
-	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_X
-
-	ld bc, BLOB_REEL_LEFT
-	MEMBER_POKE_WORD (BLOB_FRAME)
-
-	ret
-
-faceDown:
-	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
-
-	ld bc, BLOB_REEL_DOWN
-	MEMBER_POKE_WORD (BLOB_FRAME)
-
-	ret
-
-faceUp:
-	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
-
-	ld bc, BLOB_REEL_UP
-	MEMBER_POKE_WORD (BLOB_FRAME)
-
-	ret
+	jr .yield

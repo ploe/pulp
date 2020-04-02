@@ -306,6 +306,16 @@ MEMBER_BIT: MACRO
 
 	ENDM
 
+; MEMBER macros preserve the address in BC
+
+MEMBER_ADDRESS: MACRO
+; bc <~> Data
+; \1 ~> Member
+; hl <~ Data->Member address
+	ld hl, \1
+	add hl, bc
+
+	ENDM
 
 NEW_MEMBER_PEEK_BYTE: MACRO
 ; Get the Value in Data->Member and returns Data in HL
@@ -389,6 +399,5 @@ NEW_MEMBER_BIT: MACRO
 
 
 	ENDM
-
 
 ENDC
