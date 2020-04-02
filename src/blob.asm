@@ -21,7 +21,7 @@ BLOB_H EQU 8
 
 BLOB_TYPE::
 dw Blob_Update
-dw Blob_Animate
+dw NEW_Blob_Animate
 dw Blob_VramSetup
 
 
@@ -90,6 +90,69 @@ BLOB_REEL_RIGHT::
 	; Go back to start
 	db REEL_SENTINEL
 	dw BLOB_REEL_RIGHT
+
+NEW_Blob_Animate::
+
+	NEW_ACTOR_GET_THIS
+
+	; Put Frame in DE
+	NEW_MEMBER_PEEK_WORD (BLOB_FRAME)
+
+	; Put Interval in A
+	NEW_MEMBER_PEEK_BYTE (BLOB_INTERVAL)
+
+	; Put Frame in HL, compare Frame Duration with Interval
+	ld h, d
+	ld l, e
+	cp a, [hl]
+
+	; If Duration and Interval match jump to the nextFrame
+	jr z, .nextFrame
+
+	; Or just increment the Interval
+	ld hl, BLOB_INTERVAL
+	add hl, bc
+	inc [hl]
+
+	YIELD
+
+.nextFrame
+	; Reset Interval
+;.lock
+;	jr .lock
+
+	xor a
+	NEW_MEMBER_POKE_BYTE (BLOB_INTERVAL)
+
+	; Get the next Frame in the Reel
+	NEW_MEMBER_PEEK_BYTE (BLOB_FRAME)
+	ld hl, REEL_FRAME_SIZE
+	add hl, de
+
+	; If the Duration is 0 that's REEL_SENTINEL, so jump to nextReel
+	ld a, [hl]
+	and a
+	jr z, .nextReel
+
+	; Otherwise we write the new Frame
+	ld d, h
+	ld e, l
+	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
+
+	YIELD
+
+.nextReel
+	; Get the Next Reel
+	ld de, REEL_NEXT
+	add hl, de
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+
+	; Put the Next Reel in Frame
+	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
+
+	YIELD
 
 Blob_Animate::
 	ACTOR_GET_THIS

@@ -306,4 +306,89 @@ MEMBER_BIT: MACRO
 
 	ENDM
 
+
+NEW_MEMBER_PEEK_BYTE: MACRO
+; Get the Value in Data->Member and returns Data in HL
+; bc <~> Data
+; \1 ~> Member
+; a  <~ Value
+
+
+	; Add Member offset to Data address
+	ld hl, \1
+	add hl, bc
+
+	; Load Value in to Data->Member
+	ld a, [hl]
+
+	ENDM
+
+NEW_MEMBER_PEEK_WORD: MACRO
+; Get the Value in Data->Member and returns Data in HL
+; bc <~> Data
+; \1 ~> Member
+; de <~ Value
+
+	; Add Member offset to Data address
+	ld hl, \1
+	add hl, bc
+
+	; Get Value from Data->Member
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+
+	ENDM
+
+NEW_MEMBER_POKE_BYTE: MACRO
+; Sets Data->Member to Value and returns Data in HL
+; bc <~> Data
+; a  ~> Value
+; \1 ~> Member
+
+	; Add Member offset to Data address
+	ld hl, \1
+	add hl, bc
+
+	; Load Value in to Data->Member
+	ld [hl], a
+
+
+	ENDM
+
+NEW_MEMBER_POKE_WORD: MACRO
+; Sets Data->Member to Value and returns Data in HL
+; bc <~> Data
+; de ~> Value
+; \1 ~> Member
+
+	; Add Member offset to Data address
+	ld hl, \1
+	add hl, bc
+
+	; Load Value in to Data->Member
+	ld [hl], e
+	inc hl
+	ld [hl], d
+
+	ENDM
+
+NEW_MEMBER_BIT: MACRO
+; [bit|res|set] the Bit at Data->Member
+; bc <~> Data
+; \1 ~> bit | res | set
+; \2 ~> Member
+; \3 ~> Bit
+
+	; Set HL to Data->Member address
+	ld hl, \2
+	add hl, bc
+
+	; Do the appropriate bit-centric op on Data->Member[Bit]
+	\1 \3, [hl]
+
+
+	ENDM
+
+
 ENDC
