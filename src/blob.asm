@@ -244,16 +244,16 @@ NEW_Blob_Update:
 	MEMBER_ADDRESS (BLOB_X)
 	dec [hl]
 
-	jr .setFace
+	jr .getFaceY
 
 .NEW_moveRight
 	MEMBER_ADDRESS (BLOB_X)
 	inc [hl]
 
-	jr .setFace
+	jr .getFaceY
 
-.setFace
-; Change the Vector and Frame if This collides with the edge of the display
+.getFaceY
+; Change the Vector and Frame if This Y collides with the edge of the display
 	; Get BLOB_Y
 	NEW_MEMBER_PEEK_BYTE (BLOB_Y)
 
@@ -265,7 +265,28 @@ NEW_Blob_Update:
 	cp DISPLAY_B - BLOB_H
 	jr z, .NEW_faceUp
 
+	jr .getFaceX
+
+.NEW_faceDown
+	NEW_MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
+
+	ld de, BLOB_REEL_DOWN
+	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
+
+	jr .getFaceX
+
+.NEW_faceUp
+	NEW_MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
+
+	ld de, BLOB_REEL_UP
+	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
+
+	jr .getFaceX
+
+.getFaceX
+; Change the Vector and Frame if This X collides with the edge of the display
 	NEW_MEMBER_PEEK_BYTE (BLOB_X)
+
 
 	cp DISPLAY_L
 	jr z, .NEW_faceRight
@@ -273,36 +294,26 @@ NEW_Blob_Update:
 	cp DISPLAY_R
 	jr z, .NEW_faceLeft
 
-	NEW_MEMBER_PEEK_WORD (BLOB_FRAME)
 	jr .yield
 
 .NEW_faceRight
 	NEW_MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_X
+
 	ld de, BLOB_REEL_RIGHT
+	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
+
 
 	jr .yield
 
 .NEW_faceLeft
 	NEW_MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_X
+
 	ld de, BLOB_REEL_LEFT
-
-	jr .yield
-
-.NEW_faceDown
-	NEW_MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
-	ld de, BLOB_REEL_DOWN
+	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
 
 	jr .yield
 
 .yield
 ; Set the Frame and Yield the Update routine
-	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
 
 	YIELD
-
-.NEW_faceUp
-	NEW_MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
-
-	ld de, BLOB_REEL_UP
-
-	jr .yield
