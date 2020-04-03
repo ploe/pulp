@@ -85,43 +85,38 @@ Actor_Pipeline_CallMethod:
 
 	jp hl
 
-Actor_Spawn::
-; DE <~ Size
+NEW_Actor_Spawn::
+; bc ~> Size
+; bc <~ Data address
 ; Put the value of Top in HL and push to the stack
 
 	; Get the old Top and push it to the stack
-	PEEK_WORD (Actor_Top)
-	push bc
+	NEW_PEEK_WORD (Actor_Top)
+	push de
 
 	; If the Top is empty
-	ld a, c
-	or b
+	ld a, e
+	or d
 	jr nz, .continue
 
 	; then start at ACTOR_SPACE_START
-	ld bc, ACTOR_SPACE_START
+	ld de, ACTOR_SPACE_START
 
 .continue
-	; Put Top in HL
+	; Put Size in HL
 	ld h, b
 	ld l, c
 
-	; Put Size in BC
-	ld b, d
-	ld c, e
-
-	; Put new Top in BC
-	call Kernel_SubWord
-	ld b, h
-	ld c, l
+	; Put new Top in DE
+	SUB_WORD
 
 	; Set Top to the new Top
-	POKE_WORD (Actor_Top)
+	NEW_POKE_WORD (Actor_Top)
 
 	; Load the old Top in to the new Top's next
-	ld h, b
-	ld l, c
-	pop bc
-	MEMBER_POKE_WORD (ACTOR_NEXT)
+	ld b, d
+	ld c, e
+	pop de
+	NEW_MEMBER_POKE_WORD (ACTOR_NEXT)
 
 	ret

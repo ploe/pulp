@@ -152,21 +152,17 @@ NEW_Blob_Animate::
 
 	YIELD
 
-Blob_Init::
+NEW_Blob_Init::
 ; Setup a Blob actor
-; hl <~ Address of new Blob
+; bc <~ Address of new Blob
 
 	; Spawn our actor
-	ld de, (BLOB_SIZE)
-	call Actor_Spawn
+	ld bc, BLOB_SIZE
+	call NEW_Actor_Spawn
 
-	ld bc, BLOB_TYPE
-	MEMBER_POKE_WORD (ACTOR_TYPE)
-
-	; Put the address of Blob actor address in HL and push to stack
-	PEEK_WORD (Actor_Top)
-	ld h, b
-	ld l, c
+	; Set type
+	ld de, BLOB_TYPE
+	NEW_MEMBER_POKE_WORD (ACTOR_TYPE)
 
 	; Load in the SPRITE_SHEET
 	MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE

@@ -432,4 +432,22 @@ NEW_MEMBER_BIT: MACRO
 
 	ENDM
 
+SUB_WORD: MACRO
+; Subtract words subtrahend from minuend
+; hl ~> subtrahend
+; de ~> minuend
+; de <~ result
+
+	; Subtract word in BC from HL
+	ld a, e
+	sub a, l
+	ld e, a
+
+	ld a, d
+	sbc a, h
+	ld d, a
+
+
+	ENDM
+
 ENDC
