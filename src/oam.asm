@@ -15,11 +15,11 @@ SECTION "Object Attribute Memory Code", ROM0
 
 Oam_Reset::
 ; Set Oam_Sprite_Top to the start of the Oam_Sprite_Buffer
-	ld bc, Oam_Sprite_Buffer
-	POKE_WORD (Oam_Sprite_Top)
+	ld de, Oam_Sprite_Buffer
+	NEW_POKE_WORD (Oam_Sprite_Top)
 
-	ld bc, _VRAM
-	POKE_WORD (Oam_Tile_Top)
+	ld de, _VRAM
+	NEW_POKE_WORD (Oam_Tile_Top)
 
 	ret
 
