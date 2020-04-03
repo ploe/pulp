@@ -20,9 +20,9 @@ BLOB_W EQU 8
 BLOB_H EQU 8
 
 BLOB_TYPE::
-dw NEW_Blob_Update
-dw NEW_Blob_Animate
-dw NEW_Blob_VramSetup
+dw Blob_Update
+dw Blob_Animate
+dw Blob_VramSetup
 
 
 BLOB_SHEET:
@@ -91,15 +91,15 @@ BLOB_REEL_RIGHT::
 	db REEL_SENTINEL
 	dw BLOB_REEL_RIGHT
 
-NEW_Blob_Animate::
+Blob_Animate::
 ; Animate Pipeline Method for Blob type
 ; bc ~> This
 
 	; Put Frame in DE
-	NEW_MEMBER_PEEK_WORD (BLOB_FRAME)
+	MEMBER_PEEK_WORD (BLOB_FRAME)
 
 	; Put Interval in A
-	NEW_MEMBER_PEEK_BYTE (BLOB_INTERVAL)
+	MEMBER_PEEK_BYTE (BLOB_INTERVAL)
 
 	; Put Frame in HL, compare Frame Duration with Interval
 	ld h, d
@@ -119,10 +119,10 @@ NEW_Blob_Animate::
 .nextFrame
 ; Reset Interval
 	xor a
-	NEW_MEMBER_POKE_BYTE (BLOB_INTERVAL)
+	MEMBER_POKE_BYTE (BLOB_INTERVAL)
 
 	; Get the next Frame in the Reel
-	NEW_MEMBER_PEEK_BYTE (BLOB_FRAME)
+	MEMBER_PEEK_BYTE (BLOB_FRAME)
 	ld hl, REEL_FRAME_SIZE
 	add hl, de
 
@@ -134,7 +134,7 @@ NEW_Blob_Animate::
 	; Otherwise we write the new Frame
 	ld d, h
 	ld e, l
-	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
+	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	YIELD
 
@@ -148,79 +148,79 @@ NEW_Blob_Animate::
 	ld d, [hl]
 
 	; Put the Next Reel in Frame
-	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
+	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	YIELD
 
-NEW_Blob_Init::
+Blob_Init::
 ; Setup a Blob actor
 ; bc <~ Address of new Blob
 
 	; Spawn our actor
 	ld bc, BLOB_SIZE
-	call NEW_Actor_Spawn
+	call Actor_Spawn
 
 	; Set type
 	ld de, BLOB_TYPE
-	NEW_MEMBER_POKE_WORD (ACTOR_TYPE)
+	MEMBER_POKE_WORD (ACTOR_TYPE)
 
 	; Load in the SPRITE_SHEET
 	MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
 
 	ret
 
-NEW_Blob_VramSetup:
+Blob_VramSetup:
 ; VramSetup Pipeline Method for Blob type
 ; bc ~> This
 	push bc
 
 	; Request Sprite Buffer and store in OAM_BUFFER and preserve it
-	NEW_OAM_SPRITE_REQUEST (1)
+	OAM_SPRITE_REQUEST (1)
 	push de
-	NEW_MEMBER_POKE_WORD (BLOB_OAM_BUFFER)
+	MEMBER_POKE_WORD (BLOB_OAM_BUFFER)
 
 	; Get the Y and X and preserve it
-	NEW_MEMBER_PEEK_WORD (BLOB_OFFSET)
+	MEMBER_PEEK_WORD (BLOB_OFFSET)
 	push de
 
 	; Load the current Frame in to BC, and preserve This
-	NEW_MEMBER_PEEK_WORD (BLOB_FRAME)
+	MEMBER_PEEK_WORD (BLOB_FRAME)
 	ld b, d
 	ld c, e
 
 	; Put Clip in A
-	NEW_MEMBER_PEEK_BYTE (REEL_FRAME_CLIP)
+	MEMBER_PEEK_BYTE (REEL_FRAME_CLIP)
 
 	; Refresh BC to Sprite Buffer and DE to Offset
 	pop de
 	pop bc
 
 	; Set Tile to Clip
-	NEW_MEMBER_POKE_BYTE (SPRITE_TILE)
+	MEMBER_POKE_BYTE (SPRITE_TILE)
 
-	NEW_MEMBER_POKE_WORD (SPRITE_OFFSET)
+	MEMBER_POKE_WORD (SPRITE_OFFSET)
 
 	pop bc
 
 	YIELD
 
-NEW_Blob_Update:
+Blob_Update:
 ; Update Pipeline Method for Blob type
 ; bc ~> This
 
 .getVectorY
 ; Get the Vector Y and decide to moveUp or moveDown
-	NEW_MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_Y
-	jr nz, .NEW_moveUp
-	jr z, .NEW_moveDown
+	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_Y
+	jr nz, .moveUp
+	jr z, .moveDown
 
-.NEW_moveDown
+.moveDown
 	MEMBER_ADDRESS (BLOB_Y)
 	inc [hl]
 
 	jr .getVectorX
 
-.NEW_moveUp
+.moveUp
 	MEMBER_ADDRESS (BLOB_Y)
 	dec [hl]
 
@@ -228,17 +228,17 @@ NEW_Blob_Update:
 
 .getVectorX
 ; Get the Vector X and decide whether to moveRight or moveLeft
-	NEW_MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_X
-	jr z, .NEW_moveRight
-	jr nz, .NEW_moveLeft
+	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_X
+	jr z, .moveRight
+	jr nz, .moveLeft
 
-.NEW_moveLeft
+.moveLeft
 	MEMBER_ADDRESS (BLOB_X)
 	dec [hl]
 
 	jr .getFaceY
 
-.NEW_moveRight
+.moveRight
 	MEMBER_ADDRESS (BLOB_X)
 	inc [hl]
 
@@ -247,60 +247,60 @@ NEW_Blob_Update:
 .getFaceY
 ; Change the Vector and Frame if This Y collides with the edge of the display
 	; Get BLOB_Y
-	NEW_MEMBER_PEEK_BYTE (BLOB_Y)
+	MEMBER_PEEK_BYTE (BLOB_Y)
 
 	; If at top of the display faceDown
 	cp DISPLAY_T
-	jr z, .NEW_faceDown
+	jr z, .faceDown
 
 	; If at bottom of the display faceUp
 	cp DISPLAY_B - BLOB_H
-	jr z, .NEW_faceUp
+	jr z, .faceUp
 
 	jr .getFaceX
 
-.NEW_faceDown
-	NEW_MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
+.faceDown
+	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
 
 	ld de, BLOB_REEL_DOWN
-	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
+	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	jr .getFaceX
 
-.NEW_faceUp
-	NEW_MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
+.faceUp
+	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
 
 	ld de, BLOB_REEL_UP
-	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
+	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	jr .getFaceX
 
 .getFaceX
 ; Change the Vector and Frame if This X collides with the edge of the display
-	NEW_MEMBER_PEEK_BYTE (BLOB_X)
+	MEMBER_PEEK_BYTE (BLOB_X)
 
 
 	cp DISPLAY_L
-	jr z, .NEW_faceRight
+	jr z, .faceRight
 
 	cp DISPLAY_R
-	jr z, .NEW_faceLeft
+	jr z, .faceLeft
 
 	; Yield when not colliding with edge of display
 	YIELD
 
-.NEW_faceRight
-	NEW_MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_X
+.faceRight
+	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_X
 
 	ld de, BLOB_REEL_RIGHT
-	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
+	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	YIELD
 
-.NEW_faceLeft
-	NEW_MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_X
+.faceLeft
+	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_X
 
 	ld de, BLOB_REEL_LEFT
-	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
+	MEMBER_POKE_WORD (BLOB_FRAME)
 
 	YIELD

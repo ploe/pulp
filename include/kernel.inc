@@ -48,7 +48,7 @@ MEMSET: MACRO
 
 	ENDM
 
-NEW_PEEK_WORD: MACRO
+PEEK_WORD: MACRO
 ; Get Value in Address
 ; \1 ~> Address
 ; de <~ Value
@@ -63,7 +63,7 @@ NEW_PEEK_WORD: MACRO
 
 	ENDM
 
-NEW_POKE_WORD: MACRO
+POKE_WORD: MACRO
 ; Put Value in Address
 ; \1 ~> Address
 ; de ~> Value
@@ -89,7 +89,7 @@ MEMBER_ADDRESS: MACRO
 
 	ENDM
 
-NEW_MEMBER_PEEK_BYTE: MACRO
+MEMBER_PEEK_BYTE: MACRO
 ; Get the Value in Data->Member and returns Data in HL
 ; bc <~> Data
 ; \1 ~> Member
@@ -105,7 +105,7 @@ NEW_MEMBER_PEEK_BYTE: MACRO
 
 	ENDM
 
-NEW_MEMBER_PEEK_WORD: MACRO
+MEMBER_PEEK_WORD: MACRO
 ; Get the Value in Data->Member and returns Data in HL
 ; bc <~> Data
 ; \1 ~> Member
@@ -122,7 +122,7 @@ NEW_MEMBER_PEEK_WORD: MACRO
 
 	ENDM
 
-NEW_MEMBER_POKE_BYTE: MACRO
+MEMBER_POKE_BYTE: MACRO
 ; Sets Data->Member to Value and returns Data in HL
 ; bc <~> Data
 ; a  ~> Value
@@ -138,7 +138,7 @@ NEW_MEMBER_POKE_BYTE: MACRO
 
 	ENDM
 
-NEW_MEMBER_POKE_WORD: MACRO
+MEMBER_POKE_WORD: MACRO
 ; Sets Data->Member to Value and returns Data in HL
 ; bc <~> Data
 ; de ~> Value
@@ -155,7 +155,7 @@ NEW_MEMBER_POKE_WORD: MACRO
 
 	ENDM
 
-NEW_MEMBER_BIT: MACRO
+MEMBER_BIT: MACRO
 ; [bit|res|set] the Bit at Data->Member
 ; bc <~> Data
 ; \1 ~> bit | res | set

@@ -18,11 +18,11 @@ Actor_Pipeline_Begin::
 
 	; Set Actor_Pipeline_Signal
 	push de
-	NEW_POKE_WORD (Actor_Pipeline_Signal)
+	POKE_WORD (Actor_Pipeline_Signal)
 
 	; Set This to Top and put in HL
-	NEW_PEEK_WORD (Actor_Top)
-	NEW_POKE_WORD (Actor_This)
+	PEEK_WORD (Actor_Top)
+	POKE_WORD (Actor_This)
 	ld b, d
 	ld c, e
 
@@ -37,18 +37,18 @@ Actor_Pipeline_Next::
 ; hl <~ This->Next
 
 	; If we're at the end of the Actors, we break
-	NEW_MEMBER_PEEK_WORD (ACTOR_NEXT)
+	MEMBER_PEEK_WORD (ACTOR_NEXT)
 	ld a, e
 	or d
 	ret z
 
 	; Make it the new This
-	NEW_POKE_WORD (Actor_This)
+	POKE_WORD (Actor_This)
 	ld b, d
 	ld c, e
 
 	; Put Actor_Pipeline_Signal in DE
-	NEW_PEEK_WORD (Actor_Pipeline_Signal)
+	PEEK_WORD (Actor_Pipeline_Signal)
 
 	jp Actor_Pipeline_CallMethod
 
@@ -59,7 +59,7 @@ Actor_Pipeline_CallMethod:
 	push de
 
 	; Add the Signal to the type to get to correct callback
-	NEW_MEMBER_PEEK_WORD (ACTOR_TYPE)
+	MEMBER_PEEK_WORD (ACTOR_TYPE)
 	ld h, d
 	ld l, e
 	pop de
@@ -81,13 +81,13 @@ Actor_Pipeline_CallMethod:
 
 	jp hl
 
-NEW_Actor_Spawn::
+Actor_Spawn::
 ; bc ~> Size
 ; bc <~ Data address
 ; Put the value of Top in HL and push to the stack
 
 	; Get the old Top and push it to the stack
-	NEW_PEEK_WORD (Actor_Top)
+	PEEK_WORD (Actor_Top)
 	push de
 
 	; If the Top is empty
@@ -107,12 +107,12 @@ NEW_Actor_Spawn::
 	SUB_WORD
 
 	; Set Top to the new Top
-	NEW_POKE_WORD (Actor_Top)
+	POKE_WORD (Actor_Top)
 
 	; Load the old Top in to the new Top's next
 	ld b, d
 	ld c, e
 	pop de
-	NEW_MEMBER_POKE_WORD (ACTOR_NEXT)
+	MEMBER_POKE_WORD (ACTOR_NEXT)
 
 	ret

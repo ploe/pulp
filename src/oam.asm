@@ -16,14 +16,14 @@ SECTION "Object Attribute Memory Code", ROM0
 Oam_Reset::
 ; Set Oam_Sprite_Top to the start of the Oam_Sprite_Buffer
 	ld de, Oam_Sprite_Buffer
-	NEW_POKE_WORD (Oam_Sprite_Top)
+	POKE_WORD (Oam_Sprite_Top)
 
 	ld de, _VRAM
-	NEW_POKE_WORD (Oam_Tile_Top)
+	POKE_WORD (Oam_Tile_Top)
 
 	ret
 
-NEW_Oam_Sprite_Request::
+Oam_Sprite_Request::
 ; Request Sprites from Oam_Sprite_Buffer
 ; hl ~> Size
 ; de <~ Oam_Sprite_Top
@@ -32,7 +32,7 @@ NEW_Oam_Sprite_Request::
 	push hl
 
 	; Put Oam_Sprite_Top in HL
-	NEW_PEEK_WORD (Oam_Sprite_Top)
+	PEEK_WORD (Oam_Sprite_Top)
 
 	; Refresh Size, preserve Sprite Buffer and add Oam_Sprite_Top for new Top
 	pop hl
@@ -42,7 +42,7 @@ NEW_Oam_Sprite_Request::
 	; Store new Oam_Sprite_Top
 	ld d, h
 	ld e, l
-	NEW_POKE_WORD (Oam_Sprite_Top)
+	POKE_WORD (Oam_Sprite_Top)
 
 	; Return the Sprite Buffer
 	pop de
