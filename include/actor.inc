@@ -18,25 +18,9 @@ SIGNAL_SIZE RB 0
 
 ACTOR_SPACE_START EQU $E000
 
-ACTOR_GET_THIS: MACRO
-; Get the Data for the current Actor
-; hl <~ This
-	PEEK_WORD (Actor_This)
-	ld h, b
-	ld l, c
-
-	ENDM
-
-NEW_ACTOR_GET_THIS: MACRO
-; Get the Data for the current Actor
-; hl <~ This
-	PEEK_WORD (Actor_This)
-	
-	ENDM
-
 PIPELINE_METHOD: MACRO
 ; \1 ~> Actor_Pipeline_Signal
-	ld bc, \1
+	ld de, \1
 	call Actor_Pipeline_Begin
 
 	ENDM

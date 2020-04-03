@@ -92,8 +92,8 @@ BLOB_REEL_RIGHT::
 	dw BLOB_REEL_RIGHT
 
 NEW_Blob_Animate::
-
-	NEW_ACTOR_GET_THIS
+; Animate Pipeline Method for Blob type
+; bc ~> This
 
 	; Put Frame in DE
 	NEW_MEMBER_PEEK_WORD (BLOB_FRAME)
@@ -117,8 +117,7 @@ NEW_Blob_Animate::
 	YIELD
 
 .nextFrame
-	; Reset Interval
-
+; Reset Interval
 	xor a
 	NEW_MEMBER_POKE_BYTE (BLOB_INTERVAL)
 
@@ -140,7 +139,8 @@ NEW_Blob_Animate::
 	YIELD
 
 .nextReel
-	; Get the Next Reel
+; Get the Next Reel
+
 	ld de, REEL_NEXT
 	add hl, de
 	ld e, [hl]
@@ -171,8 +171,8 @@ NEW_Blob_Init::
 
 NEW_Blob_VramSetup:
 ; VramSetup Pipeline Method for Blob type
-
-	NEW_ACTOR_GET_THIS
+; bc ~> This
+	push bc
 
 	; Request Sprite Buffer and store in OAM_BUFFER and preserve it
 	NEW_OAM_SPRITE_REQUEST (1)
@@ -200,11 +200,13 @@ NEW_Blob_VramSetup:
 
 	NEW_MEMBER_POKE_WORD (SPRITE_OFFSET)
 
+	pop bc
+
 	YIELD
 
 NEW_Blob_Update:
 ; Update Pipeline Method for Blob type
-	NEW_ACTOR_GET_THIS
+; bc ~> This
 
 .getVectorY
 ; Get the Vector Y and decide to moveUp or moveDown

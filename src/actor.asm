@@ -13,21 +13,21 @@ SECTION "Actor ROM0", ROM0
 
 Actor_Pipeline_Begin::
 ; Call the Pipeline Method on each Actor from the Top
-; bc <~> Method signal
-; hl ~> This
+; de <~> Method signal
+; bc <~ This
 
 	; Set Actor_Pipeline_Signal
-	push bc
-	POKE_WORD (Actor_Pipeline_Signal)
+	push de
+	NEW_POKE_WORD (Actor_Pipeline_Signal)
 
 	; Set This to Top and put in HL
-	PEEK_WORD (Actor_Top)
-	POKE_WORD (Actor_This)
-	ld h, b
-	ld l, c
+	NEW_PEEK_WORD (Actor_Top)
+	NEW_POKE_WORD (Actor_This)
+	ld b, d
+	ld c, e
 
 	; Put Actor_Pipeline_Signal in BC
-	pop bc
+	pop de
 
 	jp Actor_Pipeline_CallMethod
 
@@ -36,52 +36,48 @@ Actor_Pipeline_Next::
 ; bc <~ Actor_Pipeline_Signal
 ; hl <~ This->Next
 
-	ACTOR_GET_THIS
-
 	; If we're at the end of the Actors, we break
-	MEMBER_PEEK_WORD (ACTOR_NEXT)
-	ld a, c
-	or b
+	NEW_MEMBER_PEEK_WORD (ACTOR_NEXT)
+	ld a, e
+	or d
 	ret z
 
 	; Make it the new This
-	POKE_WORD (Actor_This)
-	push bc
+	NEW_POKE_WORD (Actor_This)
+	ld b, d
+	ld c, e
 
-	; Put Actor_Pipeline_Signal in BC
-	PEEK_WORD (Actor_Pipeline_Signal)
-
-	; Put this in HL
-	pop hl
+	; Put Actor_Pipeline_Signal in DE
+	NEW_PEEK_WORD (Actor_Pipeline_Signal)
 
 	jp Actor_Pipeline_CallMethod
 
 Actor_Pipeline_CallMethod:
-; hl ~> This
-; bc ~> Actor_Pipeline_Signal
+; bc ~> This
+; de ~> Actor_Pipeline_Signal
 	; Preserve Actor_Pipeline_Signal
-	push bc
+	push de
 
 	; Add the Signal to the type to get to correct callback
-	MEMBER_PEEK_WORD (ACTOR_TYPE)
-	ld h, b
-	ld l, c
+	NEW_MEMBER_PEEK_WORD (ACTOR_TYPE)
+	ld h, d
+	ld l, e
 	pop de
 	add hl, de
 
 	; Put the callback in BC
-	ld c, [hl]
+	ld e, [hl]
 	inc hl
-	ld b, [hl]
+	ld d, [hl]
 
 	; If the callback is not set, let's do the next Actor
-	ld a, c
-	or b
+	ld a, e
+	or d
 	jp z, Actor_Pipeline_Next
 
 	; Otherwise call the callback
-	ld h, b
-	ld l, c
+	ld h, d
+	ld l, e
 
 	jp hl
 
