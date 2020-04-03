@@ -22,7 +22,7 @@ BLOB_H EQU 8
 BLOB_TYPE::
 dw NEW_Blob_Update
 dw NEW_Blob_Animate
-dw Blob_VramSetup
+dw NEW_Blob_VramSetup
 
 
 BLOB_SHEET:
@@ -173,42 +173,36 @@ Blob_Init::
 
 	ret
 
-Blob_VramSetup:
-; Sets up the Blob to be rendered
-	ACTOR_GET_THIS
-	push hl
+NEW_Blob_VramSetup:
+; VramSetup Pipeline Method for Blob type
 
-	; Request Sprite from OAM
-	OAM_SPRITE_REQUEST (1)
+	NEW_ACTOR_GET_THIS
 
-	; SET OAM_BUFFER to response
-	pop hl
-	MEMBER_POKE_WORD (BLOB_OAM_BUFFER)
+	; Request Sprite Buffer and store in OAM_BUFFER and preserve it
+	NEW_OAM_SPRITE_REQUEST (1)
+	push de
+	NEW_MEMBER_POKE_WORD (BLOB_OAM_BUFFER)
 
-	MEMBER_PEEK_WORD (BLOB_OFFSET)
-	push bc
+	; Get the Y and X and preserve it
+	NEW_MEMBER_PEEK_WORD (BLOB_OFFSET)
+	push de
 
-	; Put the current frame in HL, push This to stack
-	push hl
-	INDEX_PEEK_WORD (BLOB_FRAME)
-	ld h, b
-	ld l, c
+	; Load the current Frame in to BC, and preserve This
+	NEW_MEMBER_PEEK_WORD (BLOB_FRAME)
+	ld b, d
+	ld c, e
 
-	; Get the CLIP
-	INDEX_PEEK_BYTE (REEL_FRAME_CLIP)
+	; Put Clip in A
+	NEW_MEMBER_PEEK_BYTE (REEL_FRAME_CLIP)
 
-	; Pop This, and put address OAM_BUFFER in HL
-	pop hl
-	INDEX_PEEK_WORD (BLOB_OAM_BUFFER)
-	ld h, b
-	ld l, c
-
-	; Set TILE to CLIP
-	MEMBER_POKE_BYTE (SPRITE_TILE)
-
-	; Set X and Y to OFFSET
+	; Refresh BC to Sprite Buffer and DE to Offset
+	pop de
 	pop bc
-	MEMBER_POKE_WORD (SPRITE_OFFSET)
+
+	; Set Tile to Clip
+	NEW_MEMBER_POKE_BYTE (SPRITE_TILE)
+
+	NEW_MEMBER_POKE_WORD (SPRITE_OFFSET)
 
 	YIELD
 
@@ -294,7 +288,8 @@ NEW_Blob_Update:
 	cp DISPLAY_R
 	jr z, .NEW_faceLeft
 
-	jr .yield
+	; Yield when not colliding with edge of display
+	YIELD
 
 .NEW_faceRight
 	NEW_MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_X
@@ -302,18 +297,12 @@ NEW_Blob_Update:
 	ld de, BLOB_REEL_RIGHT
 	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
 
-
-	jr .yield
+	YIELD
 
 .NEW_faceLeft
 	NEW_MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_X
 
 	ld de, BLOB_REEL_LEFT
 	NEW_MEMBER_POKE_WORD (BLOB_FRAME)
-
-	jr .yield
-
-.yield
-; Set the Frame and Yield the Update routine
 
 	YIELD

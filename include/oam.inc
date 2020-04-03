@@ -13,9 +13,9 @@ SPRITE_SIZE RB 0
 
 OAM_LIMIT EQU 40
 
-OAM_SPRITE_REQUEST: MACRO
-	ld de, \1 * SPRITE_SIZE
-	call Oam_Sprite_Request
+NEW_OAM_SPRITE_REQUEST: MACRO
+	ld hl, \1 * SPRITE_SIZE
+	call NEW_Oam_Sprite_Request
 
 	ENDM
 

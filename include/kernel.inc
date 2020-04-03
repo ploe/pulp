@@ -306,6 +306,38 @@ MEMBER_BIT: MACRO
 
 	ENDM
 
+; ALL THE NEW_ REFACTOR FUNCTIONS
+
+NEW_PEEK_WORD: MACRO
+; Get Value in Address
+; \1 ~> Address
+; de <~ Value
+
+	; Load address
+	ld hl, \1
+
+	; Get Value
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+
+	ENDM
+
+NEW_POKE_WORD: MACRO
+; Put Value in Address
+; \1 ~> Address
+; de ~> Value
+
+	; Load address
+	ld hl, \1
+
+	; Load Value in to Data->Member
+	ld [hl], e
+	inc hl
+	ld [hl], d
+
+	ENDM
+
 ; MEMBER macros preserve the address in BC
 
 MEMBER_ADDRESS: MACRO

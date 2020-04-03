@@ -23,26 +23,28 @@ Oam_Reset::
 
 	ret
 
-Oam_Sprite_Request::
+NEW_Oam_Sprite_Request::
 ; Request Sprites from Oam_Sprite_Buffer
-; de ~> Size
-; bc <~ Oam_Sprite_Top
+; hl ~> Size
+; de <~ Oam_Sprite_Top
 
-	; Put Oam_Sprite_Top in HL and push to stack
-	PEEK_WORD (Oam_Sprite_Top)
-	push bc
-	ld h, b
-	ld l, c
+	; Preserve Size
+	push hl
 
-	; Get new Oam_Sprite_Top
+	; Put Oam_Sprite_Top in HL
+	NEW_PEEK_WORD (Oam_Sprite_Top)
+
+	; Refresh Size, preserve Sprite Buffer and add Oam_Sprite_Top for new Top
+	pop hl
+	push de
 	add hl, de
 
-	; Load the new Oam_Sprite_Top
-	ld b, h
-	ld c, l
-	POKE_WORD (Oam_Sprite_Top)
+	; Store new Oam_Sprite_Top
+	ld d, h
+	ld e, l
+	NEW_POKE_WORD (Oam_Sprite_Top)
 
-	; Return the Sprite buffer
-	pop bc
+	; Return the Sprite Buffer
+	pop de
 
 	ret
