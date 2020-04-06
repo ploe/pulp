@@ -180,7 +180,7 @@ Blob_VramSetup:
 	MEMBER_POKE_WORD (BLOB_OAM_BUFFER)
 
 	; Get the Y and X and preserve it
-	MEMBER_PEEK_WORD (BLOB_OFFSET)
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_OFFSET)
 	push de
 
 	; Load the current Frame in to BC, and preserve This
@@ -215,13 +215,13 @@ Blob_Update:
 	jr z, .moveDown
 
 .moveDown
-	MEMBER_ADDRESS (BLOB_Y)
+	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_Y)
 	inc [hl]
 
 	jr .getVectorX
 
 .moveUp
-	MEMBER_ADDRESS (BLOB_Y)
+	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_Y)
 	dec [hl]
 
 	jr .getVectorX
@@ -233,21 +233,21 @@ Blob_Update:
 	jr nz, .moveLeft
 
 .moveLeft
-	MEMBER_ADDRESS (BLOB_X)
+	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_X)
 	dec [hl]
 
 	jr .getFaceY
 
 .moveRight
-	MEMBER_ADDRESS (BLOB_X)
+	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_X)
 	inc [hl]
 
 	jr .getFaceY
 
 .getFaceY
 ; Change the Vector and Frame if This Y collides with the edge of the display
-	; Get BLOB_Y
-	MEMBER_PEEK_BYTE (BLOB_Y)
+	; Get BLOB_SPRITE + SPRITE_Y
+	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_Y)
 
 	; If at top of the display faceDown
 	cp DISPLAY_T
@@ -277,7 +277,7 @@ Blob_Update:
 
 .getFaceX
 ; Change the Vector and Frame if This X collides with the edge of the display
-	MEMBER_PEEK_BYTE (BLOB_X)
+	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_X)
 
 
 	cp DISPLAY_L

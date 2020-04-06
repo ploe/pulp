@@ -12,34 +12,6 @@ Kernel_WaitingForVblank: db
 
 SECTION "Kernel ROM0", ROM0
 
-SUBW: MACRO
-; Subtract words subtrahend from minuend
-; \1 ~> minuend
-; \2 ~> subtrahend
-; hl <~ result
-
-	ld hl, \1
-	ld bc, \2
-	call Kernel_SubWord
-
-	ENDM
-
-Kernel_SubWord::
-; Subtract words subtrahend from minuend
-; bc ~> subtrahend
-; hl ~> minuend
-; hl <~ result
-
-	; Subtract word in BC from HL
-	ld a, l
-	sub a, c
-	ld l, a
-	ld a, h
-	sbc a, b
-	ld h, a
-
-	ret
-
 Kernel_MemCpy::
 ; Copies num number of bytes from source to destination
 ; bc ~> num
@@ -100,13 +72,13 @@ Kernel_Init::
 	call Sound_Init
 
 	BLOB_SPAWN $11, $15, %00000000, BLOB_REEL_RIGHT
-	BLOB_SPAWN $33, $33, %00000001, BLOB_REEL_UP
-	BLOB_SPAWN $55, $55, %00000011, BLOB_REEL_LEFT
-	BLOB_SPAWN $77, $77, %00000010, BLOB_REEL_DOWN
-	BLOB_SPAWN $11, $88, %00000000, BLOB_REEL_DOWN
-	BLOB_SPAWN $33, $66, %00000001, BLOB_REEL_DOWN
-	BLOB_SPAWN $55, $40, %00000011, BLOB_REEL_DOWN
-	BLOB_SPAWN $77, $22, %00000010, BLOB_REEL_DOWN
+	;BLOB_SPAWN $33, $33, %00000001, BLOB_REEL_UP
+	;BLOB_SPAWN $55, $55, %00000011, BLOB_REEL_LEFT
+	;BLOB_SPAWN $77, $77, %00000010, BLOB_REEL_DOWN
+	;BLOB_SPAWN $11, $88, %00000000, BLOB_REEL_DOWN
+	;BLOB_SPAWN $33, $66, %00000001, BLOB_REEL_DOWN
+	;BLOB_SPAWN $55, $40, %00000011, BLOB_REEL_DOWN
+	;BLOB_SPAWN $77, $22, %00000010, BLOB_REEL_DOWN
 
 	;BLOB_SPAWN $22, $22, %00000010, BLOB_REEL_UP
 	;BLOB_SPAWN $44, $44, %00000001, BLOB_REEL_UP
