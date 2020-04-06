@@ -9,7 +9,7 @@ SECTION "Object Attribute Memory WRAM Data", WRAM0[$C000]
 ; from there to $XX9F
 Oam_Sprite_Buffer:: ds SPRITE_SIZE * OAM_LIMIT
 Oam_Sprite_Top:: dw
-Oam_Tile_Top:: dw
+Oam_Tile_Top:: db
 
 SECTION "Object Attribute Memory Code", ROM0
 
@@ -18,8 +18,8 @@ Oam_Reset::
 	ld de, Oam_Sprite_Buffer
 	POKE_WORD (Oam_Sprite_Top)
 
-	ld de, _VRAM
-	POKE_WORD (Oam_Tile_Top)
+	xor a
+	ld [Oam_Tile_Top], a
 
 	ret
 

@@ -19,6 +19,10 @@ BLOB_VECTOR_X EQU 1
 BLOB_W EQU 8
 BLOB_H EQU 8
 
+BLOB_MASS_H EQU 1
+BLOB_MASS_W EQU 1
+BLOB_MASS EQU (BLOB_MASS_H * BLOB_MASS_W)
+
 BLOB_TYPE::
 dw Blob_Update
 dw Blob_Animate
@@ -38,6 +42,14 @@ REEL_FRAME_SPRITESHEET RW 1
 REEL_FRAME_SIZE RB 0
 
 REEL_SENTINEL EQU 0
+
+BLOB_TILE_MASS EQU (TILE_SIZEOF)
+
+BLOB_REEL_DOON::
+	db 15, BLOB_SHEET
+	db 15, BLOB_SHEET + (BLOB_TILE_MASS)
+	db REEL_SENTINEL
+	dw BLOB_REEL_DOON
 
 BLOB_REEL_DOWN::
 	; Frame 1
@@ -175,9 +187,12 @@ Blob_VramSetup:
 	push bc
 
 	; Request Sprite Buffer and store in OAM_BUFFER and preserve it
-	OAM_SPRITE_REQUEST (1)
+	OAM_SPRITE_REQUEST (BLOB_TOTAL_MASS)
 	push de
 	MEMBER_POKE_WORD (BLOB_OAM_BUFFER)
+
+	OAM_TILE_REQUEST (BLOB_TOTAL_MASS)
+	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_TILE)
 
 	; Get the Y and X and preserve it
 	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_OFFSET)
@@ -199,6 +214,41 @@ Blob_VramSetup:
 	MEMBER_POKE_BYTE (SPRITE_TILE)
 
 	MEMBER_POKE_WORD (SPRITE_OFFSET)
+
+	pop bc
+
+	YIELD
+
+Blob_VramWrite:
+	push bc
+
+	;
+	MEMBER_ADDRESS (BLOB_SPRITE)
+	ld b, h
+	ld c, l
+
+	; Put Sprite_Tile in DE
+	xor a
+	ld d, a
+	MEMBER_PEEK_BYTE (SPRITE_TILE)
+	ld e, a
+
+	; Get the offset in VRAM to write to, and preserve it
+	ld hl, _VRAM
+	add hl, de
+	push hl
+
+	;MEMBER_PEEK_WORD (SPRITE_SHEET_TILE)
+
+	ld bc, TILE_SIZEOF * BLOB_TOTAL_MASS
+
+	pop hl
+
+	call Kernel_MemCpy
+
+	; bc ~> num
+	; de ~> source
+	; hl ~> destination
 
 	pop bc
 
