@@ -13,7 +13,7 @@ SECTION "Blob II Code", ROM0
 RSRESET
 BLOB_II_ACTOR RB ACTOR_SIZE
 BLOB_II_SPRITE RB SPRITE_SIZE
-BLOB_II_OAM_BUFFER RW 1
+BLOB_II_SPRITE_BUFFER RW 1
 BLOB_II_VECTORS RB 1
 BLOB_II_FRAME RW 1
 BLOB_II_INTERVAL RB 1
@@ -72,6 +72,9 @@ BLOB_II_REEL_DOWN:
 	REEL_JUMP BLOB_II_REEL_DOWN
 
 Blob_Animate:
+; Animate Pipeline Method for Blob type
+; bc <~> This
+
 	; Preserve This
 	push bc
 
@@ -121,14 +124,12 @@ Blob_Animate:
 	pop bc
 	MEMBER_POKE_WORD (BLOB_II_FRAME)
 
+	jr .resetInterval
+
 .resetInterval
 	xor a
 	MEMBER_POKE_BYTE (BLOB_II_INTERVAL)
 
-	YIELD
-
-Blob_VramWrite:
-Blob_VramSetup:
 	YIELD
 
 Blob_II_Init::
@@ -142,6 +143,12 @@ Blob_II_Init::
 	; Set type
 	ld de, BLOB_II_TYPE
 	MEMBER_POKE_WORD (ACTOR_TYPE)
+
+	ld de, $1111
+	MEMBER_POKE_WORD (BLOB_II_SPRITE + SPRITE_OFFSET)
+
+	ld de, BLOB_II_REEL_DOWN
+	MEMBER_POKE_WORD (BLOB_II_FRAME)
 
 	ret
 
@@ -247,5 +254,94 @@ Blob_Update:
 
 	;ld de, BLOB_II_REEL_LEFT
 	MEMBER_POKE_WORD (BLOB_II_FRAME)
+
+	YIELD
+
+Blob_VramSetup:
+; VramSetup Pipeline Method for Blob type
+; bc <~> This
+
+	; Preserve This
+	push bc
+
+	; Ask OAM for Sprite Buffer
+	OAM_SPRITE_REQUEST (BLOB_II_MASS)
+	MEMBER_POKE_WORD (BLOB_II_SPRITE_BUFFER)
+
+	; Ask OAM for Tile Offset
+	OAM_TILE_REQUEST (BLOB_II_MASS)
+	MEMBER_POKE_BYTE (BLOB_II_SPRITE + SPRITE_TILE)
+
+	; Preserve the Sprite Offset
+	MEMBER_PEEK_WORD (BLOB_II_SPRITE + SPRITE_OFFSET)
+	push de
+
+	; Preserve the Sprite Attributes
+	MEMBER_PEEK_WORD (BLOB_II_SPRITE + SPRITE_ATTRIBUTES)
+	push de
+
+	; Get the Sprite Buffer and put it in BC
+	MEMBER_PEEK_WORD (BLOB_II_SPRITE_BUFFER)
+	ld b, d
+	ld c, e
+
+	; Write the Sprite Attributes to the Sprite Buffer
+	pop de
+	MEMBER_POKE_WORD (SPRITE_ATTRIBUTES)
+
+	; Write the Sprite Offset to the Sprite Buffer
+	pop de
+	MEMBER_POKE_WORD (SPRITE_OFFSET)
+
+	; Refresh This
+	pop bc
+
+	YIELD
+
+Blob_VramWrite:
+; VramWrite Pipeline Method for Blob type
+; bc <~> This
+
+	push bc
+
+	; Get Tile Offset in VRAM and preserve it
+	xor a
+	ld d, a
+	MEMBER_PEEK_BYTE (BLOB_II_SPRITE + SPRITE_TILE)
+	ld e, a
+	ld hl, _VRAM
+	add hl, de
+	push hl
+
+	; Put current Frame in BC
+	MEMBER_PEEK_WORD (BLOB_II_FRAME)
+	ld b, d
+	ld c, e
+
+	; Get the Sprite we want to put in the Tile Offset (source)
+	MEMBER_PEEK_WORD (FRAME_SPRITE)
+
+	; Refresh Tile Offset (destination)
+	pop hl
+
+	; Number of Tiles to copy
+	ld bc, (SIZEOF_TILE * BLOB_II_MASS)
+
+.nextByte
+	; Put source in to destination
+	ld a, [de]
+	ld [hl], a
+
+	; Set  up for the nextByte
+	inc hl
+	inc de
+	dec bc
+
+	; If we have zero bytes left to copy we exit
+	ld a, c
+	or b
+	jr nz, .nextByte
+
+	pop bc
 
 	YIELD

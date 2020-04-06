@@ -7,6 +7,7 @@ SPRITE_START RB 0
 SPRITE_OFFSET RB 0
 SPRITE_Y RB 1
 SPRITE_X RB 1
+SPRITE_ATTRIBUTES RB 0
 SPRITE_TILE RB 1
 SPRITE_FLAGS RB 1
 SPRITE_MASS RB 1
@@ -19,7 +20,7 @@ TILE_SIZEOF EQU 16
 OAM_TILE_REQUEST: MACRO
 ; Return offset of where Tile Buffer starts
 ; \1 ~> Size
-; e  <~ Oam_Tile_Top Offset
+; a  <~ Oam_Tile_Top Offset
 
 	; Put the current Oam_Tile_Top in L and A
 	ld a, [Oam_Tile_Top]
@@ -28,6 +29,9 @@ OAM_TILE_REQUEST: MACRO
 	; Add Oam_Tile_Top to Size, and store it
 	add a, \1
 	ld [Oam_Tile_Top], a
+
+	; Put Oam_Tile_Top in A
+	ld a, e
 
 	ENDM
 

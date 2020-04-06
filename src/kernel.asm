@@ -110,6 +110,8 @@ Kernel_Main::
 	ld a, 1
 	ld [Kernel_WaitingForVblank], a
 
+	PIPELINE_METHOD SIGNAL_VRAM_WRITE
+
 	call Display_DmaTransfer
 	call Oam_Reset
 
