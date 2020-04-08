@@ -18,6 +18,15 @@ SIGNAL_SIZE RB 0
 
 ACTOR_SPACE_START EQU $E000
 
+ACTOR_THIS: MACRO
+; bc <~ This
+	ld hl, Actor_This
+	ld c, [hl]
+	inc hl
+	ld b, [hl]
+
+	ENDM
+
 PIPELINE_METHOD: MACRO
 ; \1 ~> Actor_Pipeline_Signal
 	ld de, \1

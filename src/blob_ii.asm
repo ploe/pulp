@@ -26,9 +26,9 @@ BLOB_II_VECTORS RB 1
 BLOB_II_SIZE RB 0
 
 RSRESET
-FRAME_DURATION RB 1
-REEL_NEXT RB 0
-FRAME_SPRITE RW 1
+FRAME_INTERVAL RB 1
+FRAME_NEXT_REEL RB 0
+FRAME_TILE_SRC RW 1
 FRAME_SIZE RB 0
 
 REEL_SENTINEL EQU 0
@@ -73,67 +73,81 @@ BLOB_SHEET_SIZE EQU BLOB_SHEET_END-BLOB_SHEET
 BLOB_II_REEL_UP:
 
 BLOB_II_REEL_DOWN:
-	REEL_CLIP 100, BLOB_SHEET, 0
-	REEL_CLIP 100, BLOB_SHEET, (1 * BLOB_II_MASS)
+	REEL_CLIP 15, BLOB_SHEET, 0
+BLOB_II_REEL_DOWN_2:
+	REEL_CLIP 15, BLOB_SHEET, (1 * BLOB_II_MASS)
 	REEL_JUMP BLOB_II_REEL_DOWN
+
+	ret
 
 Blob_Animate:
 ; Animate Pipeline Method for Blob type
 ; bc <~> This
 
-	; Preserve This
-	push bc
-
-	; Put Interval in A
-	MEMBER_PEEK_BYTE (BLOB_II_ANIMATION + ANIMATION_INTERVAL)
-
-	; Get the Frame
-	MEMBER_PEEK_WORD (BLOB_II_ANIMATION + ANIMATION_FRAME)
-	ld b, d
-	ld c, e
-
-	; If Interval == Duration then nextFrame
-	MEMBER_ADDRESS (FRAME_DURATION)
-	cp a, [hl]
-	jr z, .nextFrame
-
-	; Refresh This and increment Interval
-	pop bc
+	; If Interval is 0 we pick the nextFrame
 	MEMBER_ADDRESS (BLOB_II_ANIMATION + ANIMATION_INTERVAL)
-	inc [hl]
+	dec [hl]
+	jr z, .nextFrame
 
 	YIELD
 
 .nextFrame
-	; Increment the Frame
+	; Put next Frame in BC
+	MEMBER_PEEK_WORD (BLOB_II_ANIMATION + ANIMATION_FRAME)
 	ld hl, FRAME_SIZE
-	add hl, bc
-
-	; Put new Frame in BC and check to see we're at the end (0 Duration)
+	add hl, de
 	ld b, h
 	ld c, l
-	MEMBER_PEEK_BYTE (FRAME_DURATION)
+
+	; If Interval is REEL_SENTINEL we jump to the next reel
+	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
 	and a
 	jr z, .jumpReel
 
-	; Put the new Frame in This
-	ld d, b
-	ld e, c
-	pop bc
-	MEMBER_POKE_WORD (BLOB_II_ANIMATION + ANIMATION_FRAME)
+	; Preserve Interval
+	push af
 
-	jr .resetInterval
+	; Preserve Frame Tile Src
+	MEMBER_PEEK_WORD (FRAME_TILE_SRC)
+	push de
+
+	; Preserve Frame address
+	push bc
+
+	jr .setAnimation
 
 .jumpReel
-	; Set the Frame to the next start of the next reel
-	MEMBER_PEEK_WORD (REEL_NEXT)
-	pop bc
+	; Get the Next Reel and set BC to it
+	MEMBER_PEEK_WORD (FRAME_NEXT_REEL)
+	ld b, d
+	ld c, e
+
+	; Preserve Interval
+	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
+	push af
+
+	; Preserve Tile Src
+	MEMBER_PEEK_WORD (FRAME_TILE_SRC)
+	push de
+
+	; Preserve Frame
+	push bc
+
+	jr .setAnimation
+
+.setAnimation
+	ACTOR_THIS
+
+	; Set Frame
+	pop de
 	MEMBER_POKE_WORD (BLOB_II_ANIMATION + ANIMATION_FRAME)
 
-	jr .resetInterval
+	; Set Animation Tile Src
+	pop de
+	MEMBER_POKE_WORD (BLOB_II_ANIMATION + ANIMATION_TILE_SRC)
 
-.resetInterval
-	xor a
+	; Set Animation Interval
+	pop af
 	MEMBER_POKE_BYTE (BLOB_II_ANIMATION + ANIMATION_INTERVAL)
 
 	YIELD
@@ -155,6 +169,20 @@ Blob_II_Init::
 
 	ld de, BLOB_II_REEL_DOWN
 	MEMBER_POKE_WORD (BLOB_II_ANIMATION + ANIMATION_FRAME)
+
+	push bc
+
+	MEMBER_PEEK_BYTE (BLOB_II_ANIMATION + ANIMATION_FRAME)
+	ld b, d
+	ld c, e
+
+	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
+	MEMBER_PEEK_WORD (FRAME_TILE_SRC)
+
+	pop bc
+
+	MEMBER_POKE_BYTE (BLOB_II_ANIMATION + ANIMATION_INTERVAL)
+	MEMBER_POKE_WORD (BLOB_II_ANIMATION + ANIMATION_TILE_SRC)
 
 	ret
 
@@ -325,7 +353,7 @@ Blob_VramWrite:
 	ld c, e
 
 	; Get the Sprite we want to put in the Tile Offset (source)
-	MEMBER_PEEK_WORD (FRAME_SPRITE)
+	MEMBER_PEEK_WORD (FRAME_TILE_SRC)
 
 	; Refresh Tile Offset (destination)
 	pop hl
