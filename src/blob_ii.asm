@@ -306,6 +306,15 @@ Blob_VramSetup:
 	OAM_TILE_REQUEST (BLOB_II_MASS)
 	MEMBER_POKE_BYTE (BLOB_II_SPRITE + SPRITE_TILE)
 
+	; Set the Tile Dst to tile offset in VRAM
+	ld d, 0
+	ld e, a
+	ld hl, _VRAM
+	add hl, de
+	ld d, h
+	ld e, l
+	MEMBER_POKE_WORD (BLOB_II_ANIMATION + ANIMATION_TILE_DST)
+
 	; Preserve the Sprite Offset
 	MEMBER_PEEK_WORD (BLOB_II_SPRITE + SPRITE_OFFSET)
 	push de
@@ -336,26 +345,17 @@ Blob_VramWrite:
 ; VramWrite Pipeline Method for Blob type
 ; bc <~> This
 
+	; Preserve This
 	push bc
 
-	; Get Tile Offset in VRAM and preserve it
-	xor a
-	ld d, a
-	MEMBER_PEEK_BYTE (BLOB_II_SPRITE + SPRITE_TILE)
-	ld e, a
-	ld hl, _VRAM
-	add hl, de
-	push hl
+	; Get Tile Dst and preserve it
+	MEMBER_PEEK_WORD (BLOB_II_ANIMATION + ANIMATION_TILE_DST)
+	push de
 
-	; Put current Frame in BC
-	MEMBER_PEEK_WORD (BLOB_II_ANIMATION + ANIMATION_FRAME)
-	ld b, d
-	ld c, e
+	; Get the Tile Src
+	MEMBER_PEEK_WORD (BLOB_II_ANIMATION + ANIMATION_TILE_SRC)
 
-	; Get the Sprite we want to put in the Tile Offset (source)
-	MEMBER_PEEK_WORD (FRAME_TILE_SRC)
-
-	; Refresh Tile Offset (destination)
+	; Refresh Tile Dst
 	pop hl
 
 	; Number of Tiles to copy
@@ -376,6 +376,7 @@ Blob_VramWrite:
 	or b
 	jr nz, .nextByte
 
+	; Refresh This
 	pop bc
 
 	YIELD
