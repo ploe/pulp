@@ -79,7 +79,6 @@ BLOB_FACE_UP RW 1
 BLOB_II_REEL_UP:
 	REEL_CLIP 15, BLOB_SHEET, BLOB_FACE_UP
 	REEL_CLIP 15, BLOB_SHEET, (BLOB_FACE_UP + 1)
-BLOB_II_REEL_UP_INIT:
 	REEL_JUMP BLOB_II_REEL_UP
 
 BLOB_II_REEL_DOWN:
@@ -116,10 +115,6 @@ Blob_Animate:
 	; Preserve Interval
 	push af
 
-	; Preserve Frame Tile Src
-	MEMBER_PEEK_WORD (FRAME_TILE_SRC)
-	push de
-
 	; Preserve Frame address
 	push bc
 
@@ -135,10 +130,6 @@ Blob_Animate:
 	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
 	push af
 
-	; Preserve Tile Src
-	MEMBER_PEEK_WORD (FRAME_TILE_SRC)
-	push de
-
 	; Preserve Frame
 	push bc
 
@@ -150,10 +141,6 @@ Blob_Animate:
 	; Set Frame
 	pop de
 	MEMBER_POKE_WORD (BLOB_II_ANIMATION + ANIMATION_FRAME)
-
-	; Set Animation Tile Src
-	pop de
-	MEMBER_POKE_WORD (BLOB_II_ANIMATION + ANIMATION_TILE_SRC)
 
 	; Set Animation Interval
 	pop af
@@ -274,7 +261,6 @@ Blob_Update:
 ; Change the Vector and Frame if This X collides with the edge of the display
 	MEMBER_PEEK_BYTE (BLOB_II_SPRITE + SPRITE_X)
 
-
 	cp DISPLAY_L
 	jr z, .faceRight
 
@@ -347,6 +333,17 @@ Blob_VramSetup:
 
 	; Refresh This
 	pop bc
+
+	; Put Tile Src in DE
+	MEMBER_PEEK_WORD (BLOB_II_ANIMATION + ANIMATION_FRAME)
+	ld hl, FRAME_TILE_SRC
+	add hl, de
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+
+	; Set Animation Tile Src
+	MEMBER_POKE_WORD (BLOB_II_ANIMATION + ANIMATION_TILE_SRC)
 
 	YIELD
 
