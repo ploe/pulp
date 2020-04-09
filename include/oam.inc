@@ -23,10 +23,11 @@ OAM_TILE_REQUEST: MACRO
 
 	; Put the current Oam_Tile_Top in L and A
 	ld a, [Oam_Tile_Top]
-	ld a, e
+	ld e, a
 
 	; Add Oam_Tile_Top to Size, and store it
 	add a, \1
+
 	ld [Oam_Tile_Top], a
 
 	; Put Oam_Tile_Top in A
