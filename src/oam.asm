@@ -9,9 +9,38 @@ SECTION "Object Attribute Memory WRAM Data", WRAM0[$C000]
 ; from there to $XX9F
 Oam_Sprite_Buffer:: ds SPRITE_SIZE * OAM_LIMIT
 Oam_Sprite_Top:: dw
+Oam_Tile_Buffer:: ds (TILE_SIZEOF * OAM_LIMIT)
 Oam_Tile_Top:: db
+Oam_Blit_SP:: dw
 
 SECTION "Object Attribute Memory Code", ROM0
+
+Oam_Blit_Tiles::
+	; Store SP
+	ld [Oam_Blit_SP], sp
+
+	; Put the Tile Buffer in SP
+	ld hl, Oam_Tile_Buffer
+	ld sp, hl
+
+	; Put the start of _VRAM in HL
+	ld hl, _VRAM
+
+	; Popslide Tile Buffer into VRAM
+REPT (TILE_SIZEOF / 2) * 15
+	pop de
+	ld a, e
+	ld [hli], a
+	ld a, d
+	ld [hli], a
+ENDR
+
+	; Restore SP
+	ld sp, Oam_Blit_SP
+	pop hl
+	ld sp, hl
+
+	ret
 
 Oam_Reset::
 ; Set Oam_Sprite_Top to the start of the Oam_Sprite_Buffer

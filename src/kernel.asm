@@ -92,15 +92,16 @@ Kernel_Main::
 	ld a, 1
 	ld [Kernel_WaitingForVblank], a
 
-	PIPELINE_METHOD SIGNAL_VRAM_WRITE
-
+	call Oam_Blit_Tiles
 	call Display_DmaTransfer
+
 	call Oam_Reset
 
 	; Update the state of the game by calling the Pipeline functions
 	PIPELINE_METHOD SIGNAL_UPDATE
 	PIPELINE_METHOD SIGNAL_ANIMATE
 	PIPELINE_METHOD SIGNAL_VRAM_SETUP
+	PIPELINE_METHOD SIGNAL_VRAM_WRITE
 
 	; and around we go again...
 	jr .halt
