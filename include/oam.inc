@@ -14,23 +14,23 @@ SPRITE_SIZE RB 0
 
 OAM_LIMIT EQU 40
 
-TILE_SIZEOF EQU 16
+TILE_SIZE EQU 16
 
 OAM_TILE_REQUEST: MACRO
 ; Return offset of where Tile Buffer starts
 ; \1 ~> Size
-; a  <~ Oam_Tile_Top Offset
+; a  <~ Dynamic_Tile_Buffer_0_Top Offset
 
-	; Put the current Oam_Tile_Top in L and A
-	ld a, [Oam_Tile_Top]
+	; Put the current Dynamic_Tile_Buffer_0_Top in L and A
+	ld a, [Dynamic_Tile_Buffer_0_Top]
 	ld e, a
 
-	; Add Oam_Tile_Top to Size, and store it
+	; Add Dynamic_Tile_Buffer_0_Top to Size, and store it
 	add a, \1
 
-	ld [Oam_Tile_Top], a
+	ld [Dynamic_Tile_Buffer_0_Top], a
 
-	; Put Oam_Tile_Top in A
+	; Put Dynamic_Tile_Buffer_0_Top in A
 	ld a, e
 
 	ENDM

@@ -4,14 +4,22 @@ INCLUDE "kernel.inc"
 INCLUDE "oam.inc"
 
 
+DYNAMIC_TILE_BANK_SIZE EQU (TILE_SIZE * 12)
+
 SECTION "Object Attribute Memory WRAM Data", WRAM0[$C000]
 ; Oam_Sprite_Buffer needs to be aligned with $XX00 as the built-in DMA reads
 ; from there to $XX9F
 Oam_Sprite_Buffer:: ds SPRITE_SIZE * OAM_LIMIT
 Oam_Sprite_Top:: dw
-Oam_Tile_Buffer:: ds (TILE_SIZEOF * OAM_LIMIT)
-Oam_Tile_Top:: db
+Dynamic_Tile_Buffer_0:: ds DYNAMIC_TILE_BANK_SIZE
+Dynamic_Tile_Buffer_0_Top:: db
+Dynamic_Tile_Buffer_1:: ds DYNAMIC_TILE_BANK_SIZE
+Dynamic_Tile_Buffer_1_Top:: db
 Oam_Blit_SP:: dw
+
+SECTION "Object Attribute Memory VRAM Data", VRAM[_VRAM]
+Dynamic_Tile_Bank_0:: ds DYNAMIC_TILE_BANK_SIZE
+Dynamic_Tile_Bank_1:: ds DYNAMIC_TILE_BANK_SIZE
 
 SECTION "Object Attribute Memory Code", ROM0
 
@@ -20,14 +28,14 @@ Oam_Blit_Tiles::
 	ld [Oam_Blit_SP], sp
 
 	; Put the Tile Buffer in SP
-	ld hl, Oam_Tile_Buffer
+	ld hl, Dynamic_Tile_Buffer_0
 	ld sp, hl
 
 	; Put the start of _VRAM in HL
-	ld hl, _VRAM
+	ld hl, Dynamic_Tile_Bank_0
 
 	; Popslide Tile Buffer into VRAM
-REPT (TILE_SIZEOF / 2) * 15
+REPT DYNAMIC_TILE_BANK_SIZE / 2
 	pop de
 	ld a, e
 	ld [hli], a
@@ -48,7 +56,7 @@ Oam_Reset::
 	POKE_WORD (Oam_Sprite_Top)
 
 	xor a
-	ld [Oam_Tile_Top], a
+	ld [Dynamic_Tile_Buffer_0_Top], a
 
 	ret
 

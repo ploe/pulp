@@ -357,7 +357,7 @@ Blob_VramSetup:
 
 	add hl, de
 	ld e, [hl]
-	ld hl, Oam_Tile_Buffer
+	ld hl, Dynamic_Tile_Buffer_0
 	add hl, de
 
 	ld d, h
