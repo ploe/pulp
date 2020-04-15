@@ -58,6 +58,10 @@ Sound_Init::
 
 	ret
 
+Kernel_Panic::
+;
+	jp Kernel_Panic
+
 Kernel_Init::
 ; Entrypoint passes to Kernel_Init to set the system up for use
 

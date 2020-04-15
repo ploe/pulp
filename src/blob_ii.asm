@@ -197,7 +197,6 @@ BLOB_SPAWN: MACRO
 	ENDM
 
 Blob_II_Spawn_All::
-
 	BLOB_SPAWN $33, $33, %00000001, BLOB_II_REEL_UP
 	BLOB_SPAWN $55, $55, %00000011, BLOB_II_REEL_LEFT
 	BLOB_SPAWN $77, $77, %00000010, BLOB_II_REEL_DOWN
@@ -211,7 +210,7 @@ Blob_II_Spawn_All::
 	BLOB_SPAWN $88, $88, %00000001, BLOB_II_REEL_UP
 	BLOB_SPAWN $22, $77, %00000010, BLOB_II_REEL_UP
 	BLOB_SPAWN $44, $55, %00000001, BLOB_II_REEL_UP
-	BLOB_SPAWN $66, $33, %00000001, BLOB_II_REEL_UP
+	;BLOB_SPAWN $66, $33, %00000001, BLOB_II_REEL_UP
 
 	ret
 
@@ -316,24 +315,6 @@ Blob_Update:
 
 	YIELD
 
-Tile_Sizes::
-	db 0
-	db 16
-	db 32
-	db 48
-	db 64
-	db 80
-	db 96
-	db 112
-	db 128
-	db 144
-	db 160
-	db 176
-	db 192
-	db 208
-	db 224
-	db 240
-
 Blob_VramSetup:
 ; VramSetup Pipeline Method for Blob type
 ; bc <~> This
@@ -345,23 +326,10 @@ Blob_VramSetup:
 	OAM_SPRITE_REQUEST (BLOB_II_MASS)
 	MEMBER_POKE_WORD (BLOB_II_SPRITE_BUFFER)
 
-	; Ask OAM for Tile Offset
-	OAM_TILE_REQUEST (BLOB_II_MASS)
-
+	; Set the Tile offset and Tile Dst to tile offset in VRAM
+	ld e, BLOB_II_MASS
+	call Oam_Dynamic_Tile_Request
 	MEMBER_POKE_BYTE (BLOB_II_SPRITE + SPRITE_TILE)
-
-	; Set the Tile Dst to tile offset in VRAM
-	ld d, 0
-	ld e, a
-	ld hl, Tile_Sizes
-
-	add hl, de
-	ld e, [hl]
-	ld hl, Dynamic_Tile_Buffer_0
-	add hl, de
-
-	ld d, h
-	ld e, l
 	MEMBER_POKE_WORD (BLOB_II_ANIMATION + ANIMATION_TILE_DST)
 
 	; Preserve the Sprite Offset
