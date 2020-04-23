@@ -22,13 +22,13 @@ OAM_TILE_REQUEST: MACRO
 ; a  <~ Dynamic_Tile_Buffer_0_Top Offset
 
 	; Put the current Dynamic_Tile_Buffer_0_Top in L and A
-	ld a, [Dynamic_Tile_Buffer_0_Top]
+	;ld a, [Dynamic_Tile_Buffer_0_Top]
 	ld e, a
 
 	; Add Dynamic_Tile_Buffer_0_Top to Size, and store it
 	add a, \1
 
-	ld [Dynamic_Tile_Buffer_0_Top], a
+	;ld [Dynamic_Tile_Buffer_0_Top], a
 
 	; Put Dynamic_Tile_Buffer_0_Top in A
 	ld a, e

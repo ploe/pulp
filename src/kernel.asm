@@ -107,6 +107,8 @@ Kernel_Main::
 	PIPELINE_METHOD SIGNAL_VRAM_SETUP
 	PIPELINE_METHOD SIGNAL_VRAM_WRITE
 
+	call Oam_Blit_Setup
+
 	; and around we go again...
 	jr .halt
 
