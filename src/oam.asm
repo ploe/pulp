@@ -48,6 +48,18 @@ GET_ACTIVE_BANK: MACRO
 
 	ENDM
 
+Dynamic_Tile_Banks:
+	dw Dynamic_Tile_Bank_0
+	dw Dynamic_Tile_Bank_1
+Dynamic_Tile_Banks_End:
+DYNAMIC_TILE_BANKS_SIZE EQU Dynamic_Tile_Banks_End - Dynamic_Tile_Banks
+
+Dynamic_Tile_Buffers:
+	dw (Dynamic_Tile_Buffer_0 + DYNAMIC_TILE_BUFFER_DATA)
+	dw (Dynamic_Tile_Buffer_1 + DYNAMIC_TILE_BUFFER_DATA)
+Dynamic_Tile_Buffers_End:
+DYNAMIC_TILE_BUFFERS_SIZE EQU Dynamic_Tile_Buffers_End - Dynamic_Tile_Buffers
+
 
 Oam_Blit_Setup::
 ; Puts the VRAM bank and buffers in the correct registers for Oam_Blit_Tiles
@@ -60,6 +72,22 @@ Oam_Blit_Setup::
 
 	; Get the Active Destination and leave in DE
 	GET_ACTIVE_BANK Dynamic_Tile_Banks
+
+	; Increment the Active Bank
+	ld hl, Active_Dynamic_Tile_Bank
+	ld a, [hl]
+	add a, WORD_SIZE
+
+	; If we're greater or equal to Banks Size we need to reset it
+	cp a, DYNAMIC_TILE_BANKS_SIZE
+	jr c, .return
+
+	; Reset Active Bank
+	xor a
+
+.return
+	; Store new Active Bank
+	ld [hl], a
 
 	; Put Active Source in HL
 	pop hl
@@ -100,24 +128,15 @@ Oam_Reset::
 	ld de, Oam_Sprite_Buffer
 	POKE_WORD (Oam_Sprite_Top)
 
+	; Tile Buffers start from 1 to give us a blank tile in 0
 	xor a
 	ld [Dynamic_Tile_Buffer_0 + DYNAMIC_TILE_BUFFER_TOP], a
 	ld [Dynamic_Tile_Buffer_1 + DYNAMIC_TILE_BUFFER_TOP], a
 
 	ret
 
-Dynamic_Tile_Banks:
-	dw Dynamic_Tile_Bank_0
-	dw Dynamic_Tile_Bank_1
-	dw 0
-
-Dynamic_Tile_Buffers:
-	dw (Dynamic_Tile_Buffer_0 + DYNAMIC_TILE_BUFFER_DATA)
-	dw (Dynamic_Tile_Buffer_1 + DYNAMIC_TILE_BUFFER_DATA)
-	dw 0
-
 Tile_Sizes::
-;	db 0
+	db 0
 	db 16
 	db 32
 	db 48
