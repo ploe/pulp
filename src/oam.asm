@@ -3,7 +3,7 @@ INCLUDE "hardware.inc"
 INCLUDE "kernel.inc"
 INCLUDE "oam.inc"
 
-DYNAMIC_TILE_BANK_TOTAL EQU 13
+DYNAMIC_TILE_BANK_TOTAL EQU 15
 DYNAMIC_TILE_BANK_SIZE EQU (TILE_SIZE * DYNAMIC_TILE_BANK_TOTAL)
 
 RSRESET
@@ -153,15 +153,12 @@ Tile_Sizes::
 	db 224
 	db 240
 
-Oam_Dynamic_Tile_Request::
-
-; e  ~> Size
-; a  <~ Dynamic_Tile_Buffer_0_Top Offset
-; hl <~ Dynamic_Tile_Bank offset
-
-.getBank0
-	; Put Bank 0 offset in A
-	ld a, [Dynamic_Tile_Buffer_0 + DYNAMIC_TILE_BUFFER_TOP]
+GET_BUFFER: MACRO
+; \1 ~> Dynamic Tile Buffer
+; \2 ~> Label
+; d <~ Current offset
+; a <~ Next offset
+	ld a, [\1 + + DYNAMIC_TILE_BUFFER_TOP]
 
 	; Preserve Bank 0 offset in D
 	ld d, a
@@ -171,14 +168,17 @@ Oam_Dynamic_Tile_Request::
 	cp a, DYNAMIC_TILE_BANK_TOTAL + 1
 
 	; If not, we see if there's any space in Bank 2
-	;jr nc, .getBank1
-	jr nc, .panic
+	jr c, \2
 
-	jr .setBank0
+	ENDM
 
-.setBank0
-	; Put updated value in the last Top we looked up
-	ld [Dynamic_Tile_Buffer_0 + DYNAMIC_TILE_BUFFER_TOP], a
+SET_BUFFER: MACRO
+; \1 ~> Dynamic Tile Buffer
+;	d  ~> Current offset
+; a  ~> Next offset
+; a  <~ Current offset
+; hl <~ Dynamic Tile Buffer offset
+	ld [\1 + DYNAMIC_TILE_BUFFER_TOP], a
 
 	; Return Dynamic_Tile_Buffer_0_Top
 	ld a, d
@@ -191,16 +191,38 @@ Oam_Dynamic_Tile_Request::
 	ld e, [hl]
 
 	; Get the start address of the buffer
-	ld hl, (Dynamic_Tile_Buffer_0 + DYNAMIC_TILE_BUFFER_DATA)
+	ld hl, (\1 + DYNAMIC_TILE_BUFFER_DATA)
 	add hl, de
 	ld d, h
 	ld e, l
 
-	ret
+	ENDM
 
-.panic
+Oam_Dynamic_Tile_Request::
+
+; e  ~> Size
+; a  <~ Dynamic_Tile_Buffer_0_Top Offset
+; hl <~ Dynamic_Tile_Bank offset
+
+.getBank0
+	; Put Bank 0 offset in A
+
+	;jr nc, .Kernel_Panic
+	GET_BUFFER Dynamic_Tile_Buffer_0, .setBuffer0
+	GET_BUFFER Dynamic_Tile_Buffer_1, .setBuffer1
+
 	; If there's no room in either bank, we crash the application
 	jp Kernel_Panic
+
+.setBuffer0
+	SET_BUFFER Dynamic_Tile_Buffer_0
+
+	ret
+
+.setBuffer1
+	SET_BUFFER Dynamic_Tile_Buffer_1
+
+	ret
 
 
 Oam_Sprite_Request::
