@@ -128,11 +128,6 @@ Oam_Reset::
 	ld de, Oam_Sprite_Buffer
 	POKE_WORD (Oam_Sprite_Top)
 
-	; Tile Buffers start from 1 to give us a blank tile in 0
-	;xor a
-	;ld [Dynamic_Tile_Buffer_0 + DYNAMIC_TILE_BUFFER_TOP], a
-	;ld [Dynamic_Tile_Buffer_1 + DYNAMIC_TILE_BUFFER_TOP], a
-
 	ret
 
 Tile_Sizes::
@@ -158,7 +153,7 @@ GET_BUFFER: MACRO
 ; \2 ~> Label
 ; d <~ Current offset
 ; a <~ Next offset
-	ld a, [\1 + + DYNAMIC_TILE_BUFFER_TOP]
+	ld a, [\1 + DYNAMIC_TILE_BUFFER_TOP]
 
 	; Preserve Bank 0 offset in D
 	ld d, a
@@ -174,6 +169,7 @@ GET_BUFFER: MACRO
 
 SET_BUFFER: MACRO
 ; \1 ~> Dynamic Tile Buffer
+; \2 ~> Dynamic Tile Offset
 ;	d  ~> Current offset
 ; a  ~> Next offset
 ; a  <~ Current offset
@@ -183,7 +179,7 @@ SET_BUFFER: MACRO
 	; Return Dynamic_Tile_Buffer_0_Top
 	ld a, d
 
-	; The the offset of where we want to write to
+	; Then the offset of where we want to write to
 	ld d, 0
 	ld e, a
 	ld hl, Tile_Sizes
@@ -195,6 +191,9 @@ SET_BUFFER: MACRO
 	add hl, de
 	ld d, h
 	ld e, l
+
+	; Add the offset to the Tile so we have the correct one
+	add a, \2
 
 	ENDM
 
@@ -212,12 +211,12 @@ Oam_Dynamic_Tile_Request::
 	jp Kernel_Panic
 
 .setBuffer0
-	SET_BUFFER Dynamic_Tile_Buffer_0
+	SET_BUFFER Dynamic_Tile_Buffer_0, 0
 
 	ret
 
 .setBuffer1
-	SET_BUFFER Dynamic_Tile_Buffer_1
+	SET_BUFFER Dynamic_Tile_Buffer_1, DYNAMIC_TILE_BANK_TOTAL
 
 	ret
 
