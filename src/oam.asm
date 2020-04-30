@@ -3,7 +3,7 @@ INCLUDE "hardware.inc"
 INCLUDE "kernel.inc"
 INCLUDE "oam.inc"
 
-DYNAMIC_TILE_BANK_TOTAL EQU 15
+DYNAMIC_TILE_BANK_TOTAL EQU 14
 DYNAMIC_TILE_BANK_SIZE EQU (TILE_SIZE * DYNAMIC_TILE_BANK_TOTAL)
 
 RSRESET
@@ -129,9 +129,9 @@ Oam_Reset::
 	POKE_WORD (Oam_Sprite_Top)
 
 	; Tile Buffers start from 1 to give us a blank tile in 0
-	xor a
-	ld [Dynamic_Tile_Buffer_0 + DYNAMIC_TILE_BUFFER_TOP], a
-	ld [Dynamic_Tile_Buffer_1 + DYNAMIC_TILE_BUFFER_TOP], a
+	;xor a
+	;ld [Dynamic_Tile_Buffer_0 + DYNAMIC_TILE_BUFFER_TOP], a
+	;ld [Dynamic_Tile_Buffer_1 + DYNAMIC_TILE_BUFFER_TOP], a
 
 	ret
 
@@ -205,9 +205,6 @@ Oam_Dynamic_Tile_Request::
 ; hl <~ Dynamic_Tile_Bank offset
 
 .getBank0
-	; Put Bank 0 offset in A
-
-	;jr nc, .Kernel_Panic
 	GET_BUFFER Dynamic_Tile_Buffer_0, .setBuffer0
 	GET_BUFFER Dynamic_Tile_Buffer_1, .setBuffer1
 
