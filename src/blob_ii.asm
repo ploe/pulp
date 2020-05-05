@@ -13,7 +13,6 @@ SECTION "Blob II Code", ROM0
 RSRESET
 BLOB_II_ACTOR RB ACTOR_SIZE
 BLOB_II_SPRITE RB SPRITE_SIZE
-BLOB_II_SPRITE_BUFFER RW 1
 BLOB_II_VECTORS RB 1
 BLOB_II_SIZE RB 0
 
@@ -159,19 +158,27 @@ Blob_II_Init::
 	ld bc, BLOB_II_SIZE
 	call Actor_Spawn
 
+	; Preserve our actor
+	push bc
+
 	; Set type
 	ld de, BLOB_II_TYPE
 	MEMBER_POKE_WORD (ACTOR_TYPE)
 
 	; Ask OAM for Sprite Buffer
 	OAM_SPRITE_REQUEST (BLOB_II_MASS)
-	MEMBER_POKE_WORD (BLOB_II_SPRITE_BUFFER)
+	MEMBER_POKE_WORD (BLOB_II_SPRITE + SPRITE_OAM_BUFFER)
 
 	; Set the Tile offset and Tile Dst to tile offset in VRAM
+	MEMBER_ADDRESS (BLOB_II_SPRITE)
+	ld b, h
+	ld c, l
+
 	ld e, BLOB_II_MASS
 	call Oam_Dynamic_Tile_Request
-	MEMBER_POKE_BYTE (BLOB_II_SPRITE + SPRITE_TILE)
-	MEMBER_POKE_WORD (BLOB_II_SPRITE + SPRITE_TILE_DST)
+
+	; Refresh our actor
+	pop bc
 
 	ret
 
@@ -355,7 +362,7 @@ Blob_VramSetup:
 	push de
 
 	; Get the Sprite Buffer and put it in BC
-	MEMBER_PEEK_WORD (BLOB_II_SPRITE_BUFFER)
+	MEMBER_PEEK_WORD (BLOB_II_SPRITE + SPRITE_OAM_BUFFER)
 	ld b, d
 	ld c, e
 

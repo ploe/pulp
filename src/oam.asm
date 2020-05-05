@@ -6,8 +6,11 @@ INCLUDE "oam.inc"
 DYNAMIC_TILE_BANK_TOTAL EQU 14
 DYNAMIC_TILE_BANK_SIZE EQU (TILE_SIZE * DYNAMIC_TILE_BANK_TOTAL)
 
+
+
 RSRESET
 DYNAMIC_TILE_BUFFER_TOP RB 1
+DYNAMIC_TILE_BUFFER_FLAGS RB 1
 DYNAMIC_TILE_BUFFER_DATA RB DYNAMIC_TILE_BANK_SIZE
 DYNAMIC_TILE_BUFFER_SIZE RB 0
 
@@ -151,6 +154,7 @@ Tile_Sizes::
 GET_BUFFER: MACRO
 ; \1 ~> Dynamic Tile Buffer
 ; \2 ~> Label
+; bc <~> Sprite
 ; d <~ Current offset
 ; a <~ Next offset
 	ld a, [\1 + DYNAMIC_TILE_BUFFER_TOP]
@@ -172,8 +176,7 @@ SET_BUFFER: MACRO
 ; \2 ~> Dynamic Tile Offset
 ;	d  ~> Current offset
 ; a  ~> Next offset
-; a  <~ Current offset
-; hl <~ Dynamic Tile Buffer offset
+; bc <~> Sprite
 	ld [\1 + DYNAMIC_TILE_BUFFER_TOP], a
 
 	; Return Dynamic_Tile_Buffer_0_Top
@@ -186,14 +189,21 @@ SET_BUFFER: MACRO
 	add hl, de
 	ld e, [hl]
 
-	; Get the start address of the buffer
+	; Get the start address of the Tile Dst buffer
 	ld hl, (\1 + DYNAMIC_TILE_BUFFER_DATA)
 	add hl, de
 	ld d, h
 	ld e, l
+	MEMBER_POKE_WORD (SPRITE_TILE_DST)
 
 	; Add the offset to the Tile so we have the correct one
 	add a, \2
+	MEMBER_POKE_BYTE (SPRITE_TILE)
+
+	; Store the Dynamic Tile Buffer the Sprite is using
+	ld de, \1
+	MEMBER_POKE_WORD (SPRITE_DYNAMIC_TILE_BUFFER)
+
 
 	ENDM
 
