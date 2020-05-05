@@ -65,15 +65,10 @@ Actor_Pipeline_CallMethod:
 	pop de
 	add hl, de
 
-	; Put the callback in BC
+	; Put the callback in DE
 	ld e, [hl]
 	inc hl
 	ld d, [hl]
-
-	; If the callback is not set, let's do the next Actor
-	ld a, e
-	or d
-	jp z, Actor_Pipeline_Next
 
 	; Otherwise call the callback
 	ld h, d

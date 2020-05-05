@@ -17,5 +17,5 @@ fix: $(project).gb
 
 png: blob.2bpp hero.2bpp
 
-$(project).gb: actor.o blob.o blob_ii.o display.o entrypoint.o kernel.o oam.o
+$(project).gb: actor.o blob_ii.o display.o entrypoint.o kernel.o oam.o
 	rgblink -n $(project).sym -o $(project).gb $^

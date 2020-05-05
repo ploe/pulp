@@ -35,25 +35,6 @@ DYNAMIC_TILE_BUFFER_REFRESH EQU 0
 
 OAM_LIMIT EQU 40
 
-OAM_TILE_REQUEST: MACRO
-; Return offset of where Tile Buffer starts
-; \1 ~> Size
-; a  <~ Dynamic_Tile_Buffer_0_Top Offset
-
-	; Put the current Dynamic_Tile_Buffer_0_Top in L and A
-	;ld a, [Dynamic_Tile_Buffer_0_Top]
-	ld e, a
-
-	; Add Dynamic_Tile_Buffer_0_Top to Size, and store it
-	add a, \1
-
-	;ld [Dynamic_Tile_Buffer_0_Top], a
-
-	; Put Dynamic_Tile_Buffer_0_Top in A
-	ld a, e
-
-	ENDM
-
 OAM_SPRITE_REQUEST: MACRO
 ; Return address of Sprite Buffer starts
 ; \1 ~> Size

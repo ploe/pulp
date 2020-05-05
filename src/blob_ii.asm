@@ -56,7 +56,7 @@ BLOB_II_TYPE::
 	dw Blob_Update
 	dw Blob_Animate
 	dw Blob_VramSetup
-	dw Blob_VramWrite
+	;dw Blob_VramWrite
 
 BLOB_SHEET:
 INCBIN "blob.2bpp"
@@ -99,7 +99,7 @@ Blob_Animate:
 	dec [hl]
 	jr z, .nextFrame
 
-	YIELD
+	jp Blob_VramSetup
 
 .nextFrame
 	; Put next Frame in BC
@@ -114,13 +114,19 @@ Blob_Animate:
 	and a
 	jr z, .jumpReel
 
-	; Preserve Interval
-	push af
-
 	; Preserve Frame address
-	push bc
+	ld d, b
+	ld e, c
 
-	jr .setAnimation
+	ACTOR_THIS
+
+	; Set Frame
+	MEMBER_POKE_WORD (BLOB_II_SPRITE + SPRITE_FRAME)
+
+	; Set Animation Interval
+	MEMBER_POKE_BYTE (BLOB_II_SPRITE + SPRITE_INTERVAL)
+
+	jp Blob_VramSetup
 
 .jumpReel
 	; Get the Next Reel and set BC to it
@@ -130,25 +136,20 @@ Blob_Animate:
 
 	; Preserve Interval
 	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
-	push af
 
 	; Preserve Frame
-	push bc
+	ld d, b
+	ld e, c
 
-	jr .setAnimation
-
-.setAnimation
 	ACTOR_THIS
 
 	; Set Frame
-	pop de
 	MEMBER_POKE_WORD (BLOB_II_SPRITE + SPRITE_FRAME)
 
 	; Set Animation Interval
-	pop af
 	MEMBER_POKE_BYTE (BLOB_II_SPRITE + SPRITE_INTERVAL)
 
-	YIELD
+	jp Blob_VramSetup
 
 Blob_II_Init::
 ; Setup a Blob actor
@@ -204,7 +205,6 @@ BLOB_SPAWN: MACRO
 	ld de, \4
 	MEMBER_POKE_WORD (BLOB_II_SPRITE + SPRITE_FRAME)
 
-
 	ENDM
 
 Blob_II_Spawn_All::
@@ -229,13 +229,13 @@ Blob_II_Spawn_All::
 	BLOB_SPAWN $21, $13, %00000001, BLOB_II_REEL_DOWN
 	BLOB_SPAWN $91, $94, %00000011, BLOB_II_REEL_DOWN
 	BLOB_SPAWN $12, $34, %00000010, BLOB_II_REEL_DOWN
-	;BLOB_SPAWN $56, $78, %00000010, BLOB_II_REEL_UP
-	;BLOB_SPAWN $23, $45, %00000001, BLOB_II_REEL_UP
-	;BLOB_SPAWN $66, $66, %00000011, BLOB_II_REEL_UP
-	;BLOB_SPAWN $88, $88, %00000001, BLOB_II_REEL_UP
-	;BLOB_SPAWN $22, $77, %00000010, BLOB_II_REEL_UP
-	;BLOB_SPAWN $44, $55, %00000001, BLOB_II_REEL_UP
-	;BLOB_SPAWN $66, $33, %00000001, BLOB_II_REEL_UP
+	BLOB_SPAWN $56, $78, %00000010, BLOB_II_REEL_UP
+	BLOB_SPAWN $23, $45, %00000001, BLOB_II_REEL_UP
+	BLOB_SPAWN $67, $89, %00000011, BLOB_II_REEL_UP
+	BLOB_SPAWN $01, $23, %00000001, BLOB_II_REEL_UP
+	BLOB_SPAWN $45, $67, %00000010, BLOB_II_REEL_UP
+	BLOB_SPAWN $89, $01, %00000001, BLOB_II_REEL_UP
+	BLOB_SPAWN $C0, $CC, %00000001, BLOB_II_REEL_UP
 	;BLOB_SPAWN $66, $33, %00000001, BLOB_II_REEL_UP
 
 
@@ -391,11 +391,7 @@ Blob_VramSetup:
 	; Set Animation Tile Src
 	MEMBER_POKE_WORD (BLOB_II_SPRITE + SPRITE_TILE_SRC)
 
-	YIELD
-
-Blob_VramWrite:
-; VramWrite Pipeline Method for Blob type
-; bc <~> This
+.vramWrite
 
 	MEMBER_PEEK_WORD (BLOB_II_SPRITE + SPRITE_DYNAMIC_TILE_BUFFER)
 	ld hl, DYNAMIC_TILE_BUFFER_FLAGS
