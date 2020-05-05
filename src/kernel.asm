@@ -75,6 +75,7 @@ Kernel_Init::
 	call Display_Init
 	call Sound_Init
 
+	call Oam_Reset
 	call Blob_II_Spawn_All
 
 	call Display_Start
@@ -98,8 +99,6 @@ Kernel_Main::
 
 	call Oam_Blit_Tiles
 	call Display_DmaTransfer
-
-	call Oam_Reset
 
 	; Update the state of the game by calling the Pipeline functions
 	PIPELINE_METHOD SIGNAL_UPDATE
