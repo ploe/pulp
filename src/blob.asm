@@ -7,9 +7,36 @@ INCLUDE "display.inc"
 INCLUDE "kernel.inc"
 INCLUDE "oam.inc"
 
-INCLUDE "blob.inc"
-
 SECTION "Blob Code", ROM0
+
+; Public interface for Blob
+RSRESET
+BLOB_ACTOR RB ACTOR_SIZE
+BLOB_SPRITE RB SPRITE_SIZE
+BLOB_VECTORS RB 1
+BLOB_SIZE RB 0
+
+RSRESET
+FRAME_INTERVAL RB 1
+FRAME_NEXT_REEL RB 0
+FRAME_TILE_SRC RW 1
+FRAME_SPRITE_FLAGS RB 1
+FRAME_SIZE RB 0
+
+REEL_SENTINEL EQU 0
+
+REEL_JUMP: MACRO
+	db REEL_SENTINEL
+	dw \1
+
+	ENDM
+
+REEL_CLIP: MACRO
+	db \1
+	dw \2 + (\3 * SIZEOF_TILE)
+	db \4
+
+	ENDM
 
 ; Flags for BLOB_VECTORS
 BLOB_VECTOR_Y EQU 0
@@ -19,15 +46,17 @@ BLOB_VECTOR_X EQU 1
 BLOB_W EQU 8
 BLOB_H EQU 8
 
+SIZEOF_TILE EQU 16
+
 BLOB_MASS_H EQU 1
 BLOB_MASS_W EQU 1
 BLOB_MASS EQU (BLOB_MASS_H * BLOB_MASS_W)
 
 BLOB_TYPE::
-dw Blob_Update
-dw Blob_Animate
-dw Blob_VramSetup
-
+	dw Blob_Update
+	dw Blob_Animate
+	dw Blob_VramSetup
+	;dw Blob_VramWrite
 
 BLOB_SHEET:
 INCBIN "blob.2bpp"
@@ -35,136 +64,92 @@ BLOB_SHEET_END:
 BLOB_SHEET_SIZE EQU BLOB_SHEET_END-BLOB_SHEET
 
 RSRESET
-REEL_FRAME_DURATION RB 1
-REEL_NEXT RB 0
-REEL_FRAME_CLIP RB 1
-REEL_FRAME_SPRITESHEET RW 1
-REEL_FRAME_SIZE RB 0
+BLOB_FACE_DOWN RW 1
+BLOB_FACE_LEFT RW 0
+BLOB_FACE_RIGHT RW 1
+BLOB_FACE_UP RW 1
 
-REEL_SENTINEL EQU 0
+BLOB_REEL_UP:
+	REEL_CLIP 15, BLOB_SHEET, BLOB_FACE_UP, 0
+	REEL_CLIP 15, BLOB_SHEET, (BLOB_FACE_UP + 1), 0
+	REEL_JUMP BLOB_REEL_UP
 
-BLOB_TILE_MASS EQU (TILE_SIZE)
+BLOB_REEL_DOWN:
+	REEL_CLIP 15, BLOB_SHEET, BLOB_FACE_DOWN, 0
+	REEL_CLIP 15, BLOB_SHEET, BLOB_FACE_DOWN + 1, 0
 
-BLOB_REEL_DOON::
-	db 15
-	dw BLOB_SHEET
-	db 15
-	dw BLOB_SHEET + (BLOB_TILE_MASS)
-	db REEL_SENTINEL
-	dw BLOB_REEL_DOON
+	REEL_JUMP BLOB_REEL_DOWN
 
-BLOB_REEL_DOWN::
-	; Frame 1
-	db 15, BLOB_CLIP_DOWN
-	dw BLOB_SHEET
+BLOB_REEL_LEFT:
+	REEL_CLIP 15, BLOB_SHEET, BLOB_FACE_LEFT, OAMF_XFLIP
+	REEL_CLIP 15, BLOB_SHEET, (BLOB_FACE_LEFT + 1), OAMF_XFLIP
+	REEL_JUMP BLOB_REEL_LEFT
 
-	; Frame 2
-	db 15, BLOB_CLIP_DOWN + 1
-	dw BLOB_SHEET
+BLOB_REEL_RIGHT:
+	REEL_CLIP 15, BLOB_SHEET, BLOB_FACE_LEFT, 0
+	REEL_CLIP 15, BLOB_SHEET, (BLOB_FACE_LEFT + 1), 0
+	REEL_JUMP BLOB_REEL_RIGHT
 
-	; Go back to start
-	db REEL_SENTINEL
-	dw BLOB_REEL_DOWN
-
-BLOB_REEL_UP::
-	; Frame 1
-	db 15, BLOB_CLIP_UP
-	dw BLOB_SHEET
-
-	; Frame 2
-	db 15, BLOB_CLIP_UP + 1
-	dw BLOB_SHEET
-
-	; Go back to start
-	db REEL_SENTINEL
-	dw BLOB_REEL_UP
-
-BLOB_REEL_LEFT::
-	; Frame 1
-	db 15, BLOB_CLIP_LEFT
-	dw BLOB_SHEET
-
-	; Frame 2
-	db 15, BLOB_CLIP_LEFT + 1
-	dw BLOB_SHEET
-
-	; Go back to start
-	db REEL_SENTINEL
-	dw BLOB_REEL_LEFT
-
-BLOB_REEL_RIGHT::
-	; Frame 1
-	db 15, BLOB_CLIP_RIGHT
-	dw BLOB_SHEET
-
-	; Frame 2
-	db 15, BLOB_CLIP_RIGHT + 1
-	dw BLOB_SHEET
-
-	; Go back to start
-	db REEL_SENTINEL
-	dw BLOB_REEL_RIGHT
-
-Blob_Animate::
+Blob_Animate:
 ; Animate Pipeline Method for Blob type
-; bc ~> This
+; bc <~> This
 
-	; Put Frame in DE
-	MEMBER_PEEK_WORD (BLOB_FRAME)
-
-	; Put Interval in A
-	MEMBER_PEEK_BYTE (BLOB_INTERVAL)
-
-	; Put Frame in HL, compare Frame Duration with Interval
-	ld h, d
-	ld l, e
-	cp a, [hl]
-
-	; If Duration and Interval match jump to the nextFrame
+	; If Interval is 0 we pick the nextFrame
+	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_INTERVAL)
+	dec [hl]
 	jr z, .nextFrame
 
-	; Or just increment the Interval
-	ld hl, BLOB_INTERVAL
-	add hl, bc
-	inc [hl]
-
-	YIELD
+	jp Blob_VramSetup
 
 .nextFrame
-; Reset Interval
-	xor a
-	MEMBER_POKE_BYTE (BLOB_INTERVAL)
-
-	; Get the next Frame in the Reel
-	MEMBER_PEEK_BYTE (BLOB_FRAME)
-	ld hl, REEL_FRAME_SIZE
+	; Put next Frame in BC
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_FRAME)
+	ld hl, FRAME_SIZE
 	add hl, de
+	ld b, h
+	ld c, l
 
-	; If the Duration is 0 that's REEL_SENTINEL, so jump to nextReel
-	ld a, [hl]
+	; If Interval is REEL_SENTINEL we jump to the next reel
+	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
 	and a
-	jr z, .nextReel
+	jr z, .jumpReel
 
-	; Otherwise we write the new Frame
-	ld d, h
-	ld e, l
-	MEMBER_POKE_WORD (BLOB_FRAME)
+	; Preserve Frame address
+	ld d, b
+	ld e, c
 
-	YIELD
+	ACTOR_THIS
 
-.nextReel
-; Get the Next Reel
+	; Set Frame
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
 
-	ld de, REEL_NEXT
-	add hl, de
-	ld e, [hl]
-	inc hl
-	ld d, [hl]
+	; Set Animation Interval
+	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_INTERVAL)
 
-	; Put the Next Reel in Frame
-	MEMBER_POKE_WORD (BLOB_FRAME)
+	jp Blob_VramSetup
 
-	YIELD
+.jumpReel
+	; Get the Next Reel and set BC to it
+	MEMBER_PEEK_WORD (FRAME_NEXT_REEL)
+	ld b, d
+	ld c, e
+
+	; Preserve Interval
+	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
+
+	; Preserve Frame
+	ld d, b
+	ld e, c
+
+	ACTOR_THIS
+
+	; Set Frame
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
+
+	; Set Animation Interval
+	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_INTERVAL)
+
+	jp Blob_VramSetup
 
 Blob_Init::
 ; Setup a Blob actor
@@ -174,87 +159,88 @@ Blob_Init::
 	ld bc, BLOB_SIZE
 	call Actor_Spawn
 
+	; Preserve our actor
+	push bc
+
 	; Set type
 	ld de, BLOB_TYPE
 	MEMBER_POKE_WORD (ACTOR_TYPE)
 
-	; Load in the SPRITE_SHEET
-	MEMCPY _VRAM, BLOB_SHEET, BLOB_SHEET_SIZE
-
-	ret
-
-Blob_VramSetup:
-; VramSetup Pipeline Method for Blob type
-; bc ~> This
-	push bc
-
-	; Request Sprite Buffer and store in OAM_BUFFER and preserve it
+	; Ask OAM for Sprite Buffer
 	OAM_SPRITE_REQUEST (BLOB_MASS)
-	push de
-	MEMBER_POKE_WORD (BLOB_OAM_BUFFER)
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_OAM_BUFFER)
 
-	OAM_TILE_REQUEST (BLOB_MASS)
-	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_TILE)
-
-	; Get the Y and X and preserve it
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_OFFSET)
-	push de
-
-	; Load the current Frame in to BC, and preserve This
-	MEMBER_PEEK_WORD (BLOB_FRAME)
-	ld b, d
-	ld c, e
-
-	; Put Clip in A
-	MEMBER_PEEK_BYTE (REEL_FRAME_CLIP)
-
-	; Refresh BC to Sprite Buffer and DE to Offset
-	pop de
-	pop bc
-
-	; Set Tile to Clip
-	MEMBER_POKE_BYTE (SPRITE_TILE)
-
-	MEMBER_POKE_WORD (SPRITE_OFFSET)
-
-	pop bc
-
-	YIELD
-
-Blob_VramWrite:
-	push bc
-
-	;
+	; Set the Tile offset and Tile Dst to tile offset in VRAM
 	MEMBER_ADDRESS (BLOB_SPRITE)
 	ld b, h
 	ld c, l
 
-	; Put Sprite_Tile in DE
-	xor a
-	ld d, a
-	MEMBER_PEEK_BYTE (SPRITE_TILE)
-	ld e, a
+	; Set Sprite attributes related to Dynamic Tile Request
+	ld e, BLOB_MASS
+	call Oam_Dynamic_Tile_Request
 
-	; Get the offset in VRAM to write to, and preserve it
-	ld hl, _VRAM
-	add hl, de
-	push hl
-
-	;MEMBER_PEEK_WORD (SPRITE_SHEET_TILE)
-
-	ld bc, TILE_SIZE * BLOB_MASS
-
-	pop hl
-
-	call Kernel_MemCpy
-
-	; bc ~> num
-	; de ~> source
-	; hl ~> destination
-
+	; Refresh our actor
 	pop bc
 
-	YIELD
+	ret
+
+BLOB_SPAWN: MACRO
+; Create a Blob actor
+; \1 ~> SPRITE_Y
+; \2 ~> SPRITE_X
+; \3 ~> BLOB_VECTORS
+; \4 ~> REEL
+; bc <~ Blob Data address
+	call Blob_Init
+
+	ld a, \1
+	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_Y)
+
+	ld a, \2
+	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_X)
+
+	ld a, \3
+	MEMBER_POKE_BYTE (BLOB_VECTORS)
+
+	ld de, \4
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
+
+	ENDM
+
+Blob_Spawn_All::
+	BLOB_SPAWN $33, $33, %00000001, BLOB_REEL_UP
+	BLOB_SPAWN $55, $55, %00000011, BLOB_REEL_LEFT
+	BLOB_SPAWN $77, $77, %00000010, BLOB_REEL_DOWN
+	BLOB_SPAWN $11, $88, %00000000, BLOB_REEL_DOWN
+	BLOB_SPAWN $33, $66, %00000001, BLOB_REEL_DOWN
+	BLOB_SPAWN $55, $40, %00000011, BLOB_REEL_DOWN
+	BLOB_SPAWN $77, $22, %00000010, BLOB_REEL_DOWN
+	BLOB_SPAWN $22, $22, %00000010, BLOB_REEL_UP
+	BLOB_SPAWN $44, $44, %00000001, BLOB_REEL_UP
+	BLOB_SPAWN $66, $66, %00000011, BLOB_REEL_UP
+	BLOB_SPAWN $88, $88, %00000001, BLOB_REEL_UP
+	BLOB_SPAWN $22, $77, %00000010, BLOB_REEL_UP
+	BLOB_SPAWN $44, $55, %00000001, BLOB_REEL_UP
+	BLOB_SPAWN $66, $33, %00000001, BLOB_REEL_UP
+	BLOB_SPAWN $39, $42, %00000011, BLOB_REEL_UP
+	BLOB_SPAWN $11, $22, %00000001, BLOB_REEL_LEFT
+	BLOB_SPAWN $36, $88, %00000010, BLOB_REEL_DOWN
+	BLOB_SPAWN $88, $36, %00000000, BLOB_REEL_DOWN
+	BLOB_SPAWN $21, $13, %00000001, BLOB_REEL_DOWN
+	BLOB_SPAWN $91, $94, %00000011, BLOB_REEL_DOWN
+	BLOB_SPAWN $12, $34, %00000010, BLOB_REEL_DOWN
+	BLOB_SPAWN $56, $78, %00000010, BLOB_REEL_UP
+	BLOB_SPAWN $23, $45, %00000001, BLOB_REEL_UP
+	BLOB_SPAWN $67, $89, %00000011, BLOB_REEL_UP
+	BLOB_SPAWN $01, $23, %00000001, BLOB_REEL_UP
+	BLOB_SPAWN $45, $67, %00000010, BLOB_REEL_UP
+	BLOB_SPAWN $89, $01, %00000001, BLOB_REEL_UP
+	BLOB_SPAWN $C0, $CC, %00000001, BLOB_REEL_UP
+	;BLOB_SPAWN $66, $33, %00000001, BLOB_REEL_UP
+
+
+	ret
+
 
 Blob_Update:
 ; Update Pipeline Method for Blob type
@@ -264,7 +250,7 @@ Blob_Update:
 ; Get the Vector Y and decide to moveUp or moveDown
 	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_Y
 	jr nz, .moveUp
-	jr z, .moveDown
+	jr .moveDown
 
 .moveDown
 	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_Y)
@@ -315,7 +301,7 @@ Blob_Update:
 	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
 
 	ld de, BLOB_REEL_DOWN
-	MEMBER_POKE_WORD (BLOB_FRAME)
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
 
 	jr .getFaceX
 
@@ -323,14 +309,13 @@ Blob_Update:
 	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
 
 	ld de, BLOB_REEL_UP
-	MEMBER_POKE_WORD (BLOB_FRAME)
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
 
 	jr .getFaceX
 
 .getFaceX
 ; Change the Vector and Frame if This X collides with the edge of the display
 	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_X)
-
 
 	cp DISPLAY_L
 	jr z, .faceRight
@@ -345,7 +330,7 @@ Blob_Update:
 	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_X
 
 	ld de, BLOB_REEL_RIGHT
-	MEMBER_POKE_WORD (BLOB_FRAME)
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
 
 	YIELD
 
@@ -353,6 +338,104 @@ Blob_Update:
 	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_X
 
 	ld de, BLOB_REEL_LEFT
-	MEMBER_POKE_WORD (BLOB_FRAME)
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
+
+	YIELD
+
+Blob_VramSetup:
+; VramSetup Pipeline Method for Blob type
+; bc <~> This
+
+	; Preserve This
+	push bc
+
+	; Preserve the Sprite Offset
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_OFFSET)
+	push de
+
+	; Put Sprite Flags in A
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_FRAME)
+	ld hl, FRAME_SPRITE_FLAGS
+	add hl, de
+	ld d, [hl]
+
+	; Preserve the Sprite Attributes
+	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_TILE)
+	ld e, a
+	push de
+
+	; Get the Sprite Buffer and put it in BC
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_OAM_BUFFER)
+	ld b, d
+	ld c, e
+
+	; Write the Sprite Attributes to the Sprite Buffer
+	pop de
+	MEMBER_POKE_WORD (SPRITE_ATTRIBUTES)
+
+	; Write the Sprite Offset to the Sprite Buffer
+	pop de
+	MEMBER_POKE_WORD (SPRITE_OFFSET)
+
+	; Refresh This
+	pop bc
+
+	; Put Tile Src in DE
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_FRAME)
+	ld hl, FRAME_TILE_SRC
+	add hl, de
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+
+	; Set Animation Tile Src
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_TILE_SRC)
+
+.vramWrite
+
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_DYNAMIC_TILE_BUFFER)
+	ld hl, DYNAMIC_TILE_BUFFER_FLAGS
+	add hl, de
+	bit DYNAMIC_TILE_BUFFER_REFRESH, [hl]
+
+	jr nz, .copySprite
+
+	YIELD
+
+.copySprite
+
+	; Preserve This
+	push bc
+
+	; Get Tile Dst and preserve it
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_TILE_DST)
+	push de
+
+	; Get the Tile Src
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_TILE_SRC)
+
+	; Refresh Tile Dst
+	pop hl
+
+	; Number of Tiles to copy
+	ld bc, (SIZEOF_TILE * BLOB_MASS)
+
+.nextByte
+	; Put source in to destination
+	ld a, [de]
+	ld [hl], a
+
+	; Set  up for the nextByte
+	inc hl
+	inc de
+	dec bc
+
+	; If we have zero bytes left to copy we exit
+	ld a, c
+	or b
+	jr nz, .nextByte
+
+	; Refresh This
+	pop bc
 
 	YIELD

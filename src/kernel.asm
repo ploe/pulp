@@ -76,7 +76,7 @@ Kernel_Init::
 	call Sound_Init
 
 	call Oam_Reset
-	call Blob_II_Spawn_All
+	call Blob_Spawn_All
 
 	call Display_Start
 
