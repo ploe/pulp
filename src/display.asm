@@ -78,9 +78,9 @@ Display_Start::
 DMA_DELAY EQU $28
 
 Display_DmaTransferStart:
-; This is the routine that transfers from Oam_Sprite_Buffer to the OAM in VRAM
+; This is the routine that transfers from Oam_Buffer to the OAM in VRAM
 	; trigger DMA transfer
-	ld a, HIGH(Oam_Sprite_Buffer)
+	ld a, HIGH(Oam_Buffer)
 	ld [rDMA], a
 
 	;

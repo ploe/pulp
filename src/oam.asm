@@ -4,18 +4,18 @@ INCLUDE "kernel.inc"
 INCLUDE "oam.inc"
 
 SECTION "Object Attribute Memory WRAM Data", WRAM0[$C000]
-; Oam_Sprite_Buffer needs to be aligned with $XX00 as the built-in DMA reads
+; Oam_Buffer needs to be aligned with $XX00 as the built-in DMA reads
 ; from there to $XX9F
-Oam_Sprite_Buffer:: ds SPRITE_OAM_OBJECT_SIZE * OAM_LIMIT
-Oam_Sprite_Top:: dw
-Active_Dynamic_Tile_Bank:: db
-Dynamic_Tile_Buffer_0:: ds DYNAMIC_TILE_BUFFER_SIZE
-Dynamic_Tile_Buffer_1:: ds DYNAMIC_TILE_BUFFER_SIZE
+Oam_Buffer:: ds SPRITE_OAM_OBJECT_SIZE * OAM_LIMIT
+Oam_Top:: dw
+Active_Sprite_Bank:: db
+Sprite_Buffer_0:: ds SPRITE_BUFFER_SIZE
+Sprite_Buffer_1:: ds SPRITE_BUFFER_SIZE
 Oam_Blit_SP:: dw
 
 SECTION "Object Attribute Memory VRAM Data", VRAM[_VRAM]
-Dynamic_Tile_Bank_0:: ds DYNAMIC_TILE_BANK_SIZE
-Dynamic_Tile_Bank_1:: ds DYNAMIC_TILE_BANK_SIZE
+Sprite_Bank_0:: ds SPRITE_BANK_SIZE
+Sprite_Bank_1:: ds SPRITE_BANK_SIZE
 
 SECTION "Object Attribute Memory Code", ROM0
 
@@ -25,7 +25,7 @@ GET_ACTIVE_BANK: MACRO
 ; Get the next Active Bank and store it in DE
 
 	; Get the current Active bank offset
-	ld hl, Active_Dynamic_Tile_Bank
+	ld hl, Active_Sprite_Bank
 	ld d, 0
 	ld e, [hl]
 
@@ -40,25 +40,25 @@ GET_ACTIVE_BANK: MACRO
 
 	ENDM
 
-Dynamic_Tile_Banks:
-	dw Dynamic_Tile_Bank_0
-	dw Dynamic_Tile_Bank_1
-Dynamic_Tile_Banks_End:
-DYNAMIC_TILE_BANKS_SIZE EQU Dynamic_Tile_Banks_End - Dynamic_Tile_Banks
+Sprite_Banks:
+	dw Sprite_Bank_0
+	dw Sprite_Bank_1
+Sprite_Banks_End:
+SPRITE_BANKS_SIZE EQU Sprite_Banks_End - Sprite_Banks
 
-Dynamic_Tile_Buffers:
-	dw (Dynamic_Tile_Buffer_0)
-	dw (Dynamic_Tile_Buffer_1)
-Dynamic_Tile_Buffers_End:
-DYNAMIC_TILE_BUFFERS_SIZE EQU Dynamic_Tile_Buffers_End - Dynamic_Tile_Buffers
+Sprite_Buffers:
+	dw (Sprite_Buffer_0)
+	dw (Sprite_Buffer_1)
+Sprite_Buffers_End:
+SPRITE_BUFFERS_SIZE EQU Sprite_Buffers_End - Sprite_Buffers
 
-Oam_Next_Dynamic_Tile_Bank::
+Oam_Next_Sprite_Bank::
 	; Increment the Active Bank
-	ld a, [Active_Dynamic_Tile_Bank]
+	ld a, [Active_Sprite_Bank]
 	add a, WORD_SIZE
 
 	; If we're greater or equal to Banks Size we need to reset it
-	cp a, DYNAMIC_TILE_BANKS_SIZE
+	cp a, SPRITE_BANKS_SIZE
 	jr c, .return
 
 	; Reset Active Bank
@@ -66,19 +66,19 @@ Oam_Next_Dynamic_Tile_Bank::
 
 .return
 	; Unset the Refresh bit on the previous Buffer
-	GET_ACTIVE_BANK Dynamic_Tile_Buffers
-	ld hl, DYNAMIC_TILE_BUFFER_FLAGS
+	GET_ACTIVE_BANK Sprite_Buffers
+	ld hl, SPRITE_BUFFER_FLAGS
 	add hl, de
-	res DYNAMIC_TILE_BUFFER_REFRESH, [hl]
+	res SPRITE_BUFFER_REFRESH, [hl]
 
 	; Store new Active Bank
-	ld [Active_Dynamic_Tile_Bank], a
+	ld [Active_Sprite_Bank], a
 
 	; Set the REFRESH bit on the next Buffer
-	GET_ACTIVE_BANK Dynamic_Tile_Buffers
-	ld hl, DYNAMIC_TILE_BUFFER_FLAGS
+	GET_ACTIVE_BANK Sprite_Buffers
+	ld hl, SPRITE_BUFFER_FLAGS
 	add hl, de
-	set DYNAMIC_TILE_BUFFER_REFRESH, [hl]
+	set SPRITE_BUFFER_REFRESH, [hl]
 
 
 	ret
@@ -89,13 +89,13 @@ Oam_Blit_Setup::
 ; de <~ Active Dest
 
 	; Get the Active Source and preserve
-	GET_ACTIVE_BANK Dynamic_Tile_Buffers
-	ld hl, DYNAMIC_TILE_BUFFER_DATA
+	GET_ACTIVE_BANK Sprite_Buffers
+	ld hl, SPRITE_BUFFER_DATA
 	add hl, de
 	push hl
 
 	; Get the Active Destination and leave in DE
-	GET_ACTIVE_BANK Dynamic_Tile_Banks
+	GET_ACTIVE_BANK Sprite_Banks
 
 	; Put Active Source in HL
 	pop hl
@@ -116,7 +116,7 @@ Oam_Blit_Tiles::
 	ld l, e
 
 	; Popslide Tile Buffer into VRAM
-REPT DYNAMIC_TILE_BANK_SIZE / 2
+REPT SPRITE_BANK_SIZE / 2
 	pop de
 	ld a, e
 	ld [hli], a
@@ -132,9 +132,9 @@ ENDR
 	ret
 
 Oam_Reset::
-; Set Oam_Sprite_Top to the start of the Oam_Sprite_Buffer
-	ld de, Oam_Sprite_Buffer
-	POKE_WORD (Oam_Sprite_Top)
+; Set Sprite_Top to the start of the Oam_Buffer
+	ld de, Oam_Buffer
+	POKE_WORD (Oam_Top)
 
 	ret
 
@@ -157,19 +157,19 @@ Tile_Sizes::
 	db 240
 
 GET_BUFFER: MACRO
-; \1 ~> Dynamic Tile Buffer
+; \1 ~> Sprite Buffer
 ; \2 ~> Label
 ; bc <~> Sprite
 ; d <~ Current offset
 ; a <~ Next offset
-	ld a, [\1 + DYNAMIC_TILE_BUFFER_TOP]
+	ld a, [\1 + SPRITE_BUFFER_TOP]
 
 	; Preserve Bank 0 offset in D
 	ld d, a
 
 	; If offset will fit in Bank 0, we respond
 	add a, e
-	cp a, DYNAMIC_TILE_BANK_TOTAL + 1
+	cp a, SPRITE_BANK_TOTAL + 1
 
 	; If not, we see if there's any space in Bank 2
 	jr c, \2
@@ -177,14 +177,14 @@ GET_BUFFER: MACRO
 	ENDM
 
 SET_BUFFER: MACRO
-; \1 ~> Dynamic Tile Buffer
-; \2 ~> Dynamic Tile Offset
+; \1 ~> Sprite Buffer
+; \2 ~> Sprite Offset
 ;	d  ~> Current offset
 ; a  ~> Next offset
 ; bc <~> Sprite
-	ld [\1 + DYNAMIC_TILE_BUFFER_TOP], a
+	ld [\1 + SPRITE_BUFFER_TOP], a
 
-	; Return Dynamic_Tile_Buffer_0_Top
+	; Return Sprite_Buffer_0_Top
 	ld a, d
 
 	; Then the offset of where we want to write to
@@ -195,7 +195,7 @@ SET_BUFFER: MACRO
 	ld e, [hl]
 
 	; Get the start address of the Tile Dst buffer
-	ld hl, (\1 + DYNAMIC_TILE_BUFFER_DATA)
+	ld hl, (\1 + SPRITE_BUFFER_DATA)
 	add hl, de
 	ld d, h
 	ld e, l
@@ -205,59 +205,57 @@ SET_BUFFER: MACRO
 	add a, \2
 	MEMBER_POKE_BYTE (SPRITE_TILE)
 
-	; Store the Dynamic Tile Buffer the Sprite is using
+	; Store the Sprite Buffer the Sprite is using
 	ld de, \1
-	MEMBER_POKE_WORD (SPRITE_DYNAMIC_TILE_BUFFER)
+	MEMBER_POKE_WORD (SPRITE_BANK)
 
 
 	ENDM
 
-Oam_Dynamic_Tile_Request::
-
+Sprite_Request::
 ; e  ~> Size
-; a  <~ Dynamic_Tile_Buffer_0_Top Offset
-; hl <~ Dynamic_Tile_Bank offset
+; a  <~ Sprite_Buffer_0_Top Offset
+; hl <~ Sprite_Bank offset
 
 .getBank0
-	GET_BUFFER Dynamic_Tile_Buffer_0, .setBuffer0
-	GET_BUFFER Dynamic_Tile_Buffer_1, .setBuffer1
+	GET_BUFFER Sprite_Buffer_0, .setBuffer0
+	GET_BUFFER Sprite_Buffer_1, .setBuffer1
 
 	; If there's no room in either bank, we crash the application
 	jp Kernel_Panic
 
 .setBuffer0
-	SET_BUFFER Dynamic_Tile_Buffer_0, 0
+	SET_BUFFER Sprite_Buffer_0, 0
 
 	ret
 
 .setBuffer1
-	SET_BUFFER Dynamic_Tile_Buffer_1, DYNAMIC_TILE_BANK_TOTAL
+	SET_BUFFER Sprite_Buffer_1, SPRITE_BANK_TOTAL
 
 	ret
 
-
-Oam_Sprite_Request::
-; Request Sprites from Oam_Sprite_Buffer
+Oam_Request::
+; Request Sprites from Sprite_Buffer
 ; hl ~> Size
-; de <~ Oam_Sprite_Top
+; de <~ Sprite_Top
 
 	; Preserve Size
 	push hl
 
-	; Put Oam_Sprite_Top in HL
-	PEEK_WORD (Oam_Sprite_Top)
+	; Put Oam_Top in HL
+	PEEK_WORD (Oam_Top)
 
-	; Refresh Size, preserve Sprite Buffer and add Oam_Sprite_Top for new Top
+	; Refresh Size, preserve Oam Buffer and add Oam_Top for new Top
 	pop hl
 	push de
 	add hl, de
 
-	; Store new Oam_Sprite_Top
+	; Store new Oam_Top
 	ld d, h
 	ld e, l
-	POKE_WORD (Oam_Sprite_Top)
+	POKE_WORD (Oam_Top)
 
-	; Return the Sprite Buffer
+	; Return the Oam Buffer
 	pop de
 
 	ret

@@ -99,12 +99,11 @@ Kernel_Main::
 
 	call Oam_Blit_Tiles
 	call Display_DmaTransfer
-	call Oam_Next_Dynamic_Tile_Bank
+	call Oam_Next_Sprite_Bank
 
 	; Update the state of the game by calling the Pipeline functions
 	PIPELINE_METHOD SIGNAL_UPDATE
 	PIPELINE_METHOD SIGNAL_ANIMATE
-	;PIPELINE_METHOD SIGNAL_VRAM_SETUP
 
 	call Oam_Blit_Setup
 

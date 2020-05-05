@@ -175,9 +175,9 @@ Blob_Init::
 	ld b, h
 	ld c, l
 
-	; Set Sprite attributes related to Dynamic Tile Request
+	; Set Sprite attributes related to Sprite Request
 	ld e, BLOB_MASS
-	call Oam_Dynamic_Tile_Request
+	call Sprite_Request
 
 	; Refresh our actor
 	pop bc
@@ -393,10 +393,10 @@ Blob_VramSetup:
 
 .vramWrite
 
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_DYNAMIC_TILE_BUFFER)
-	ld hl, DYNAMIC_TILE_BUFFER_FLAGS
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_BANK)
+	ld hl, SPRITE_BUFFER_FLAGS
 	add hl, de
-	bit DYNAMIC_TILE_BUFFER_REFRESH, [hl]
+	bit SPRITE_BUFFER_REFRESH, [hl]
 
 	jr nz, .copySprite
 
