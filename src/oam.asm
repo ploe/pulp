@@ -14,7 +14,7 @@ DYNAMIC_TILE_BUFFER_SIZE RB 0
 SECTION "Object Attribute Memory WRAM Data", WRAM0[$C000]
 ; Oam_Sprite_Buffer needs to be aligned with $XX00 as the built-in DMA reads
 ; from there to $XX9F
-Oam_Sprite_Buffer:: ds SPRITE_SIZE * OAM_LIMIT
+Oam_Sprite_Buffer:: ds SPRITE_OAM_OBJECT_SIZE * OAM_LIMIT
 Oam_Sprite_Top:: dw
 Active_Dynamic_Tile_Bank:: db
 Dynamic_Tile_Buffer_0:: ds DYNAMIC_TILE_BUFFER_SIZE
