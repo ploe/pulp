@@ -3,17 +3,6 @@ INCLUDE "hardware.inc"
 INCLUDE "kernel.inc"
 INCLUDE "oam.inc"
 
-DYNAMIC_TILE_BANK_TOTAL EQU 14
-DYNAMIC_TILE_BANK_SIZE EQU (TILE_SIZE * DYNAMIC_TILE_BANK_TOTAL)
-
-
-
-RSRESET
-DYNAMIC_TILE_BUFFER_TOP RB 1
-DYNAMIC_TILE_BUFFER_FLAGS RB 1
-DYNAMIC_TILE_BUFFER_DATA RB DYNAMIC_TILE_BANK_SIZE
-DYNAMIC_TILE_BUFFER_SIZE RB 0
-
 SECTION "Object Attribute Memory WRAM Data", WRAM0[$C000]
 ; Oam_Sprite_Buffer needs to be aligned with $XX00 as the built-in DMA reads
 ; from there to $XX9F
@@ -44,7 +33,7 @@ GET_ACTIVE_BANK: MACRO
 	ld hl, \1
 	add hl, de
 
-	; If the address is 0 we reset the bank
+	; Put Buffer Address in HL
 	ld e, [hl]
 	inc hl
 	ld d, [hl]
@@ -58,27 +47,14 @@ Dynamic_Tile_Banks_End:
 DYNAMIC_TILE_BANKS_SIZE EQU Dynamic_Tile_Banks_End - Dynamic_Tile_Banks
 
 Dynamic_Tile_Buffers:
-	dw (Dynamic_Tile_Buffer_0 + DYNAMIC_TILE_BUFFER_DATA)
-	dw (Dynamic_Tile_Buffer_1 + DYNAMIC_TILE_BUFFER_DATA)
+	dw (Dynamic_Tile_Buffer_0)
+	dw (Dynamic_Tile_Buffer_1)
 Dynamic_Tile_Buffers_End:
 DYNAMIC_TILE_BUFFERS_SIZE EQU Dynamic_Tile_Buffers_End - Dynamic_Tile_Buffers
 
-
-Oam_Blit_Setup::
-; Puts the VRAM bank and buffers in the correct registers for Oam_Blit_Tiles
-; hl <~ Active Source
-; de <~ Active Dest
-
-	; Get the Active Source and preserve
-	GET_ACTIVE_BANK Dynamic_Tile_Buffers
-	push de
-
-	; Get the Active Destination and leave in DE
-	GET_ACTIVE_BANK Dynamic_Tile_Banks
-
+Oam_Next_Dynamic_Tile_Bank::
 	; Increment the Active Bank
-	ld hl, Active_Dynamic_Tile_Bank
-	ld a, [hl]
+	ld a, [Active_Dynamic_Tile_Bank]
 	add a, WORD_SIZE
 
 	; If we're greater or equal to Banks Size we need to reset it
@@ -89,8 +65,37 @@ Oam_Blit_Setup::
 	xor a
 
 .return
+	; Unset the Refresh bit on the previous Buffer
+	GET_ACTIVE_BANK Dynamic_Tile_Buffers
+	ld hl, DYNAMIC_TILE_BUFFER_FLAGS
+	add hl, de
+	res DYNAMIC_TILE_BUFFER_REFRESH, [hl]
+
 	; Store new Active Bank
-	ld [hl], a
+	ld [Active_Dynamic_Tile_Bank], a
+
+	; Set the REFRESH bit on the next Buffer
+	GET_ACTIVE_BANK Dynamic_Tile_Buffers
+	ld hl, DYNAMIC_TILE_BUFFER_FLAGS
+	add hl, de
+	set DYNAMIC_TILE_BUFFER_REFRESH, [hl]
+
+
+	ret
+
+Oam_Blit_Setup::
+; Puts the VRAM bank and buffers in the correct registers for Oam_Blit_Tiles
+; hl <~ Active Source
+; de <~ Active Dest
+
+	; Get the Active Source and preserve
+	GET_ACTIVE_BANK Dynamic_Tile_Buffers
+	ld hl, DYNAMIC_TILE_BUFFER_DATA
+	add hl, de
+	push hl
+
+	; Get the Active Destination and leave in DE
+	GET_ACTIVE_BANK Dynamic_Tile_Banks
 
 	; Put Active Source in HL
 	pop hl
