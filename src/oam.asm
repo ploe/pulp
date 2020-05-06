@@ -11,11 +11,13 @@ Oam_Top:: dw
 Active_Sprite_Bank:: db
 Sprite_Buffer_0:: ds SPRITE_BUFFER_SIZE
 Sprite_Buffer_1:: ds SPRITE_BUFFER_SIZE
+Sprite_Buffer_2:: ds SPRITE_BUFFER_SIZE
 Oam_Blit_SP:: dw
 
 SECTION "Object Attribute Memory VRAM Data", VRAM[_VRAM]
 Sprite_Bank_0:: ds SPRITE_BANK_SIZE
 Sprite_Bank_1:: ds SPRITE_BANK_SIZE
+Sprite_Bank_2:: ds SPRITE_BANK_SIZE
 
 SECTION "Object Attribute Memory Code", ROM0
 
@@ -43,12 +45,14 @@ GET_ACTIVE_BANK: MACRO
 Sprite_Banks:
 	dw Sprite_Bank_0
 	dw Sprite_Bank_1
+	dw Sprite_Bank_2
 Sprite_Banks_End:
 SPRITE_BANKS_SIZE EQU Sprite_Banks_End - Sprite_Banks
 
 Sprite_Buffers:
 	dw Sprite_Buffer_0
 	dw Sprite_Buffer_1
+	dw Sprite_Buffer_2
 Sprite_Buffers_End:
 SPRITE_BUFFERS_SIZE EQU Sprite_Buffers_End - Sprite_Buffers
 
@@ -79,7 +83,6 @@ Oam_Next_Sprite_Bank::
 	ld hl, SPRITE_BUFFER_FLAGS
 	add hl, de
 	set SPRITE_BUFFER_FLAG_REFRESH, [hl]
-
 
 	ret
 
@@ -220,6 +223,7 @@ Sprite_Request::
 .getBank0
 	GET_BUFFER Sprite_Buffer_0, .setBuffer0
 	GET_BUFFER Sprite_Buffer_1, .setBuffer1
+	GET_BUFFER Sprite_Buffer_2, .setBuffer2
 
 	; If there's no room in either bank, we crash the application
 	jp Kernel_Panic
@@ -231,6 +235,12 @@ Sprite_Request::
 
 .setBuffer1
 	SET_BUFFER Sprite_Buffer_1, SPRITE_BANK_TOTAL
+
+	ret
+
+.setBuffer2
+	SET_BUFFER Sprite_Buffer_2, (SPRITE_BANK_TOTAL * 2)
+	;jp Kernel_Panic
 
 	ret
 
