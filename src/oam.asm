@@ -47,8 +47,8 @@ Sprite_Banks_End:
 SPRITE_BANKS_SIZE EQU Sprite_Banks_End - Sprite_Banks
 
 Sprite_Buffers:
-	dw (Sprite_Buffer_0)
-	dw (Sprite_Buffer_1)
+	dw Sprite_Buffer_0
+	dw Sprite_Buffer_1
 Sprite_Buffers_End:
 SPRITE_BUFFERS_SIZE EQU Sprite_Buffers_End - Sprite_Buffers
 
@@ -69,7 +69,7 @@ Oam_Next_Sprite_Bank::
 	GET_ACTIVE_BANK Sprite_Buffers
 	ld hl, SPRITE_BUFFER_FLAGS
 	add hl, de
-	res SPRITE_BUFFER_REFRESH, [hl]
+	res SPRITE_BUFFER_FLAG_REFRESH, [hl]
 
 	; Store new Active Bank
 	ld [Active_Sprite_Bank], a
@@ -78,7 +78,7 @@ Oam_Next_Sprite_Bank::
 	GET_ACTIVE_BANK Sprite_Buffers
 	ld hl, SPRITE_BUFFER_FLAGS
 	add hl, de
-	set SPRITE_BUFFER_REFRESH, [hl]
+	set SPRITE_BUFFER_FLAG_REFRESH, [hl]
 
 
 	ret
