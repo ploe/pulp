@@ -84,8 +84,16 @@ MEMBER_ADDRESS: MACRO
 ; bc <~> Data
 ; \1 ~> Member
 ; hl <~ Data->Member address
+
+IF \1 == 0
+; When the index is 0 we don't need to add the offset
+	ld h, b
+	ld l, c
+ELSE
+	; Put BC in HL as-is
 	ld hl, \1
 	add hl, bc
+ENDC
 
 	ENDM
 
@@ -95,13 +103,16 @@ MEMBER_PEEK_BYTE: MACRO
 ; \1 ~> Member
 ; a  <~ Value
 
+IF \1 == 0
+	; Load Value from Data->Member
+	ld a, [bc]
+ELSE
+	; Get Member offset
+	MEMBER_ADDRESS \1
 
-	; Add Member offset to Data address
-	ld hl, \1
-	add hl, bc
-
-	; Load Value in to Data->Member
+	; Load Value from Data->Member
 	ld a, [hl]
+ENDC
 
 	ENDM
 
@@ -111,9 +122,8 @@ MEMBER_PEEK_WORD: MACRO
 ; \1 ~> Member
 ; de <~ Value
 
-	; Add Member offset to Data address
-	ld hl, \1
-	add hl, bc
+	; Get Member offset
+	MEMBER_ADDRESS \1
 
 	; Get Value from Data->Member
 	ld e, [hl]
@@ -128,13 +138,16 @@ MEMBER_POKE_BYTE: MACRO
 ; a  ~> Value
 ; \1 ~> Member
 
-	; Add Member offset to Data address
-	ld hl, \1
-	add hl, bc
+IF \1 == 0
+	; Load Value from Data->Member
+	ld [bc], a
+ELSE
+	; Get Member offset
+	MEMBER_ADDRESS \1
 
 	; Load Value in to Data->Member
 	ld [hl], a
-
+ENDC
 
 	ENDM
 
@@ -144,9 +157,8 @@ MEMBER_POKE_WORD: MACRO
 ; de ~> Value
 ; \1 ~> Member
 
-	; Add Member offset to Data address
-	ld hl, \1
-	add hl, bc
+	; Get Member offset
+	MEMBER_ADDRESS \1
 
 	; Load Value in to Data->Member
 	ld [hl], e
@@ -163,12 +175,10 @@ MEMBER_BIT: MACRO
 ; \3 ~> Bit
 
 	; Set HL to Data->Member address
-	ld hl, \2
-	add hl, bc
+	MEMBER_ADDRESS \2
 
 	; Do the appropriate bit-centric op on Data->Member[Bit]
 	\1 \3, [hl]
-
 
 	ENDM
 
