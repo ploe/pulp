@@ -376,12 +376,44 @@ Blob_VramSetup:
 ; VramSetup Pipeline Method for Blob type
 ; bc <~> This
 
-	; Preserve This
-	push bc
-
 	; Preserve the Sprite Offset
 	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_OFFSET)
 	push de
+
+	; Put offset address of Oam Buffer in HL
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_OAM_BUFFER)
+	ld hl, (SPRITE_OFFSET)
+	add hl, de
+
+	; Set offset of Oam Buffer
+	pop de
+	ld [hl], e
+	inc hl
+	ld [hl], d
+
+	; Don't update VRAM if Sprite not updated
+	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_FLAGS)
+	bit SPRITE_FLAG_UPDATED, [hl]
+	jr z, .noWrite
+
+	; Don't update VRAM unless it's the current bank's turn
+	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_BANK)
+	ld hl, SPRITE_BUFFER_FLAGS
+	add hl, de
+	bit SPRITE_BUFFER_FLAG_REFRESH, [hl]
+	jr z, .noWrite
+
+	; Otherwise update Vram
+	jr .vramWrite
+
+.noWrite
+
+	YIELD
+
+.vramWrite
+
+	; Preserve This
+	push bc
 
 	; Put Sprite Flags in A
 	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_FRAME)
@@ -403,20 +435,9 @@ Blob_VramSetup:
 	pop de
 	MEMBER_POKE_WORD (SPRITE_ATTRIBUTES)
 
-	; Write the Sprite Offset to the Sprite Buffer
-	pop de
-	MEMBER_POKE_WORD (SPRITE_OFFSET)
-
 	; Refresh This
 	pop bc
 
-	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_FLAGS)
-	bit SPRITE_FLAG_UPDATED, [hl]
-	jr nz, .vramWrite
-
-	YIELD
-
-.vramWrite
 	; Put Tile Src in DE
 	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_FRAME)
 	ld hl, FRAME_TILE_SRC
@@ -427,15 +448,6 @@ Blob_VramSetup:
 
 	; Set Animation Tile Src
 	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_TILE_SRC)
-
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_BANK)
-	ld hl, SPRITE_BUFFER_FLAGS
-	add hl, de
-	bit SPRITE_BUFFER_FLAG_REFRESH, [hl]
-
-	jr nz, .copySprite
-
-	YIELD
 
 .copySprite
 
