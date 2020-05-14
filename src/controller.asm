@@ -1,8 +1,8 @@
 INCLUDE "hardware.inc"
 
 SECTION "Controller WRAM Data", WRAM0
-Controller_Keys_Down:: ds 1
-Controller_Keys_Held:: ds 1
+Controller_Keys_Down:: db
+Controller_Keys_Held:: db
 
 SECTION "Controller Code", ROM0
 

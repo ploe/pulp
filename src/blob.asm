@@ -3,6 +3,7 @@ INCLUDE "hardware.inc"
 
 ; project libs
 INCLUDE "actor.inc"
+INCLUDE "controller.inc"
 INCLUDE "display.inc"
 INCLUDE "kernel.inc"
 INCLUDE "oam.inc"
@@ -14,6 +15,9 @@ RSRESET
 BLOB_ACTOR RB ACTOR_SIZE
 BLOB_SPRITE RB SPRITE_SIZE
 BLOB_VECTORS RB 1
+BLOB_START_X RB 1
+BLOB_START_Y RB 1
+BLOB_START_VECTORS RB 1
 BLOB_SIZE RB 0
 
 RSRESET
@@ -328,12 +332,15 @@ BLOB_SPAWN: MACRO
 
 	ld a, \1
 	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_Y)
+	MEMBER_POKE_BYTE (BLOB_START_Y)
 
 	ld a, \2
 	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_X)
+	MEMBER_POKE_BYTE (BLOB_START_X)
 
 	ld a, \3
 	MEMBER_POKE_BYTE (BLOB_VECTORS)
+	MEMBER_POKE_BYTE (BLOB_START_VECTORS)
 
 	ld de, \4
 	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
@@ -397,6 +404,30 @@ Blob_Update:
 ; Update Pipeline Method for Blob type
 ; bc ~> This
 
+	; When A is pressed the Blob's move off in their original direction
+	CONTROLLER_KEY_DOWN CONTROLLER_A, .resetVectors
+
+	; When B is pressed the Blob's reset to their original position
+	CONTROLLER_KEY_DOWN CONTROLLER_B, .resetOffset
+
+	jr .getVectorY
+
+.resetVectors
+	MEMBER_PEEK_BYTE (BLOB_START_VECTORS)
+	MEMBER_POKE_BYTE (BLOB_VECTORS)
+
+	jr .getVectorY
+
+.resetOffset
+
+	MEMBER_PEEK_BYTE (BLOB_START_Y)
+	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_Y)
+
+	MEMBER_PEEK_BYTE (BLOB_START_X)
+	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_X)
+
+	jr .getVectorY
+
 .getVectorY
 ; Get the Vector Y and decide to moveUp or moveDown
 	MEMBER_BIT bit, BLOB_VECTORS, BLOB_VECTOR_Y
@@ -435,6 +466,11 @@ Blob_Update:
 
 .getFaceY
 ; Change the Vector and Frame if This Y collides with the edge of the display
+
+	CONTROLLER_KEY_DOWN CONTROLLER_DOWN, .faceDown
+	CONTROLLER_KEY_DOWN CONTROLLER_UP, .faceUp
+
+
 	; Get BLOB_SPRITE + SPRITE_Y
 	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_Y)
 
@@ -469,7 +505,10 @@ Blob_Update:
 	jr .getFaceX
 
 .getFaceX
-; Change the Vector and Frame if This X collides with the edge of the display
+	CONTROLLER_KEY_DOWN CONTROLLER_RIGHT, .faceRight
+	CONTROLLER_KEY_DOWN CONTROLLER_LEFT, .faceLeft
+
+	; Change the Vector and Frame if This X collides with the edge of the display
 	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_X)
 
 	cp DISPLAY_L

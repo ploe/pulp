@@ -88,20 +88,25 @@ Kernel_Main::
 .halt
 	halt
 
-	; was it a v-blank interrupt?
+	; Is Kernel_WaitingForVblank unset?
 	ld a, [Kernel_WaitingForVblank]
 	and a
 	jr nz, .halt
 
-	; set v-blank to wait again
+	; Set Kernel_WaitingForVblank
 	ld a, 1
 	ld [Kernel_WaitingForVblank], a
 
+.render
+	; Render routines
 	call Oam_Blit_Tiles
 	call Display_DmaTransfer
 	call Oam_Next_Sprite_Bank
 
+.update:
+	; Update routines
 	call Controller_Update
+
 	; Update the state of the game by calling the Pipeline functions
 	PIPELINE_METHOD SIGNAL_UPDATE
 	PIPELINE_METHOD SIGNAL_ANIMATE
@@ -112,7 +117,8 @@ Kernel_Main::
 	jr .halt
 
 SECTION "Kernel V-Blank Interrupt", ROM0[$40]
-	; stop waiting for v-blank
+VBlank_Interrupt::
+	; Unset Kernel_WaitingForVblank
 	xor a
 	ld [Kernel_WaitingForVblank], a
 
