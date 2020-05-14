@@ -101,6 +101,7 @@ Kernel_Main::
 	call Display_DmaTransfer
 	call Oam_Next_Sprite_Bank
 
+	call Controller_Update
 	; Update the state of the game by calling the Pipeline functions
 	PIPELINE_METHOD SIGNAL_UPDATE
 	PIPELINE_METHOD SIGNAL_ANIMATE
