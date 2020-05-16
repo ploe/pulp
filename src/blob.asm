@@ -410,13 +410,13 @@ Blob_Update:
 	; When B is pressed the Blob's reset to their original position
 	CONTROLLER_KEY_CHANGED CONTROLLER_B, .resetOffset
 
-	jr .getVectorY
+	jr .getFaceY
 
 .resetVectors
 	MEMBER_PEEK_BYTE (BLOB_START_VECTORS)
 	MEMBER_POKE_BYTE (BLOB_VECTORS)
 
-	jr .getVectorY
+	jr .getFaceY
 
 .resetOffset
 
@@ -425,6 +425,80 @@ Blob_Update:
 
 	MEMBER_PEEK_BYTE (BLOB_START_X)
 	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_X)
+
+	jr .getFaceY
+
+.getFaceY
+; Change the Vector and Frame if This Y collides with the edge of the display
+
+	; Get BLOB_SPRITE + SPRITE_Y
+	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_Y)
+
+	; If at top of the display faceDown
+	cp DISPLAY_T
+	jr z, .faceDown
+
+	; If at bottom of the display faceUp
+	cp DISPLAY_B - BLOB_H
+	jr z, .faceUp
+
+	CONTROLLER_KEY_CHANGED CONTROLLER_DOWN, .faceDown
+	CONTROLLER_KEY_CHANGED CONTROLLER_UP, .faceUp
+
+	jr .getFaceX
+
+.faceDown
+	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
+
+	ld de, BLOB_REEL_DOWN
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
+
+	UPDATE_INTERVAL
+
+	jr .getFaceX
+
+.faceUp
+	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
+
+	ld de, BLOB_REEL_UP
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
+
+	UPDATE_INTERVAL
+
+	jr .getFaceX
+
+.getFaceX
+
+	; Change the Vector and Frame if This X collides with the edge of the display
+	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_X)
+
+	cp DISPLAY_L
+	jr z, .faceRight
+
+	cp DISPLAY_R
+	jr z, .faceLeft
+
+	CONTROLLER_KEY_CHANGED CONTROLLER_RIGHT, .faceRight
+	CONTROLLER_KEY_CHANGED CONTROLLER_LEFT, .faceLeft
+
+	; Yield when not colliding with edge of display
+	jr .getVectorY
+
+.faceRight
+	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_X
+
+	ld de, BLOB_REEL_RIGHT
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
+
+	UPDATE_INTERVAL
+
+	jr .getVectorY
+
+.faceLeft
+	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_X
+
+	ld de, BLOB_REEL_LEFT
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
 
 	jr .getVectorY
 
@@ -456,84 +530,10 @@ Blob_Update:
 	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_X)
 	dec [hl]
 
-	jr .getFaceY
+	YIELD
 
 .moveRight
 	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_X)
 	inc [hl]
-
-	jr .getFaceY
-
-.getFaceY
-; Change the Vector and Frame if This Y collides with the edge of the display
-
-	CONTROLLER_KEY_CHANGED CONTROLLER_DOWN, .faceDown
-	CONTROLLER_KEY_CHANGED CONTROLLER_UP, .faceUp
-
-
-	; Get BLOB_SPRITE + SPRITE_Y
-	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_Y)
-
-	; If at top of the display faceDown
-	cp DISPLAY_T
-	jr z, .faceDown
-
-	; If at bottom of the display faceUp
-	cp DISPLAY_B - BLOB_H
-	jr z, .faceUp
-
-	jr .getFaceX
-
-.faceDown
-	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_Y
-
-	ld de, BLOB_REEL_DOWN
-	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
-
-	UPDATE_INTERVAL
-
-	jr .getFaceX
-
-.faceUp
-	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_Y
-
-	ld de, BLOB_REEL_UP
-	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
-
-	UPDATE_INTERVAL
-
-	jr .getFaceX
-
-.getFaceX
-	CONTROLLER_KEY_CHANGED CONTROLLER_RIGHT, .faceRight
-	CONTROLLER_KEY_CHANGED CONTROLLER_LEFT, .faceLeft
-
-	; Change the Vector and Frame if This X collides with the edge of the display
-	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_X)
-
-	cp DISPLAY_L
-	jr z, .faceRight
-
-	cp DISPLAY_R
-	jr z, .faceLeft
-
-	; Yield when not colliding with edge of display
-	YIELD
-
-.faceRight
-	MEMBER_BIT res, BLOB_VECTORS, BLOB_VECTOR_X
-
-	ld de, BLOB_REEL_RIGHT
-	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
-
-	UPDATE_INTERVAL
-
-	YIELD
-
-.faceLeft
-	MEMBER_BIT set, BLOB_VECTORS, BLOB_VECTOR_X
-
-	ld de, BLOB_REEL_LEFT
-	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
 
 	YIELD
