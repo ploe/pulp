@@ -14,13 +14,13 @@ CONTROLLER_UP EQU 6
 CONTROLLER_DOWN EQU 7
 
 
-CONTROLLER_KEY_DOWN: MACRO
+CONTROLLER_KEY_CHANGED: MACRO
 ; If specific key is down
 ; \1 ~> Key
 ; \2 ~> Label
 
 	; Check to see if Key was just pressed down
-	ld hl, Controller_Keys_Down
+	ld hl, Controller_Keys_Changed
 	bit \1, [hl]
 	jr nz, \2
 

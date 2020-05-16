@@ -1,7 +1,7 @@
 INCLUDE "hardware.inc"
 
 SECTION "Controller WRAM Data", WRAM0
-Controller_Keys_Down:: db
+Controller_Keys_Changed:: db
 Controller_Keys_Held:: db
 
 SECTION "Controller Code", ROM0
@@ -9,6 +9,7 @@ SECTION "Controller Code", ROM0
 CONTROLLER_P1_KEYS EQU %00001111
 
 Controller_Update::
+
 	; Set Output Port on Controller to P15 (A, B, Select, Start)
 	ld a, P1F_5
 	ld [rP1], a
@@ -40,15 +41,15 @@ Controller_Update::
 	and CONTROLLER_P1_KEYS
 	or e
 
-	; Get and store as Controller_Keys_Down
+	; Get and store as Controller_Keys_Changed
 	ld e, a
 	ld a, [Controller_Keys_Held]
 	cpl
 	and e
-	ld [Controller_Keys_Down], a
+	ld [Controller_Keys_Changed], a
 
 	; Store merged keys as Controller_Keys_Held
-	ld e, a
+	ld a, e
 	ld [Controller_Keys_Held], a
 
 	ret

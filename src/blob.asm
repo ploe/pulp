@@ -405,10 +405,10 @@ Blob_Update:
 ; bc ~> This
 
 	; When A is pressed the Blob's move off in their original direction
-	CONTROLLER_KEY_DOWN CONTROLLER_A, .resetVectors
+	CONTROLLER_KEY_CHANGED CONTROLLER_A, .resetVectors
 
 	; When B is pressed the Blob's reset to their original position
-	CONTROLLER_KEY_DOWN CONTROLLER_B, .resetOffset
+	CONTROLLER_KEY_CHANGED CONTROLLER_B, .resetOffset
 
 	jr .getVectorY
 
@@ -467,8 +467,8 @@ Blob_Update:
 .getFaceY
 ; Change the Vector and Frame if This Y collides with the edge of the display
 
-	CONTROLLER_KEY_DOWN CONTROLLER_DOWN, .faceDown
-	CONTROLLER_KEY_DOWN CONTROLLER_UP, .faceUp
+	CONTROLLER_KEY_CHANGED CONTROLLER_DOWN, .faceDown
+	CONTROLLER_KEY_CHANGED CONTROLLER_UP, .faceUp
 
 
 	; Get BLOB_SPRITE + SPRITE_Y
@@ -505,8 +505,8 @@ Blob_Update:
 	jr .getFaceX
 
 .getFaceX
-	CONTROLLER_KEY_DOWN CONTROLLER_RIGHT, .faceRight
-	CONTROLLER_KEY_DOWN CONTROLLER_LEFT, .faceLeft
+	CONTROLLER_KEY_CHANGED CONTROLLER_RIGHT, .faceRight
+	CONTROLLER_KEY_CHANGED CONTROLLER_LEFT, .faceLeft
 
 	; Change the Vector and Frame if This X collides with the edge of the display
 	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_X)
