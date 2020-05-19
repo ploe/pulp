@@ -15,7 +15,7 @@ clean:
 fix: $(project).gb
 	rgbfix -j -l 0x33 -m 0x1B -n 0 -p 0 -r 0x03 -v $(project).gb
 
-png: blob.2bpp hero.2bpp
+png: blob.2bpp daisy.2bpp
 
-$(project).gb: actor.o controller.o blob.o display.o entrypoint.o kernel.o oam.o
+$(project).gb: actor.o controller.o blob.o daisy.o display.o entrypoint.o kernel.o oam.o
 	rgblink -n $(project).sym -o $(project).gb $^

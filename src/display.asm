@@ -9,13 +9,7 @@ SECTION "Display HRAM Data", HRAM[$FF80]
 ; the built-in DMA transfer locks up ROM, and so needs putting in HRAM
 Display_DmaTransfer::
 
-
 SECTION "Display Code", ROM0
-
-HERO_SHEET:
-INCBIN "hero.2bpp"
-HERO_SHEET_END:
-HERO_SHEET_SIZE EQU HERO_SHEET_END-HERO_SHEET
 
 ; Constants
 BGP_DEFAULT EQU %11100100
