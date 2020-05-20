@@ -30,10 +30,10 @@ Daisy_Spritesheet_End:
 DAISY_SHEET_SIZE EQU (Daisy_Spritesheet_End - Daisy_Spritesheet)
 
 DAISY_REEL:
-	REEL_CLIP 16, Daisy_Spritesheet, DAISY_MASS * 1, 0
-	REEL_CLIP 16, Daisy_Spritesheet, 0, 0
-	REEL_CLIP 16, Daisy_Spritesheet, DAISY_MASS * 1, 0
-	REEL_CLIP 16, Daisy_Spritesheet, DAISY_MASS * 2, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 1, 0
+	REEL_CLIP 12, Daisy_Spritesheet, 0, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 1, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 2, 0
 	REEL_JUMP DAISY_REEL
 
 Daisy_Update:
@@ -122,20 +122,60 @@ Daisy_Animate:
 .updateOffset
 ; Amend the Oam Buffer's Offset
 
-	; Preserve the Sprite Offset
-	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_OFFSET)
-	push de
+	MEMBER_PEEK_BYTE (DAISY_SPRITE + SPRITE_X)
 
-	; Put offset address of Oam Buffer in HL
 	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_OAM_BUFFER)
-	ld hl, (SPRITE_OFFSET)
+	ld hl, SPRITE_X
 	add hl, de
 
-	; Set offset of Oam Buffer
-	pop de
-	ld [hl], e
-	inc hl
-	ld [hl], d
+	; Load X into Sprite 0
+	ld [hl], a
+
+	; Load X into Sprite 1
+	ld de, SPRITE_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Increment X by 8
+	add a, 8
+
+	; Load X into Sprite 2
+	ld de, SPRITE_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Load X into Sprite 3
+	ld de, SPRITE_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Get X offset
+	MEMBER_PEEK_BYTE (DAISY_SPRITE + SPRITE_Y)
+
+	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_OAM_BUFFER)
+	ld hl, SPRITE_Y
+	add hl, de
+
+	; Load Y into Sprite 0
+	ld [hl], a
+
+	; Load Y into Sprite 1
+	add a, 8
+	ld de, SPRITE_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Load Y into Sprite 2
+	sub a, 8
+	ld de, SPRITE_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Load Y into Sprite 3
+	add a, 8
+	ld de, SPRITE_SIZE
+	add hl, de
+	ld [hl], a
 
 .ifUpdated
 ; YIELD if Sprite does not need updated
@@ -279,5 +319,33 @@ Daisy_Init::
 	ld a, $33
 	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_Y)
 	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_X)
+
+	; Get Tile
+	MEMBER_PEEK_BYTE (DAISY_SPRITE + SPRITE_TILE)
+
+	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_OAM_BUFFER)
+
+	; Load Tile in to Sprite 0
+	ld hl, SPRITE_TILE
+	add hl, de
+	ld [hl], a
+
+	; Load Tile in to Sprite 1
+	inc a
+	ld de, SPRITE_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Load Tile in to Sprite 2
+	inc a
+	ld de, SPRITE_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Load Tile in to Sprite 3
+	inc a
+	ld de, SPRITE_SIZE
+	add hl, de
+	ld [hl], a
 
 	ret
