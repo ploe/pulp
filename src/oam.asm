@@ -6,7 +6,7 @@ INCLUDE "oam.inc"
 SECTION "Object Attribute Memory WRAM Data", WRAM0[$C000]
 ; Oam_Buffer needs to be aligned with $XX00 as the built-in DMA reads
 ; from there to $XX9F
-Oam_Buffer:: ds SPRITE_OAM_OBJECT_SIZE * OAM_LIMIT
+Oam_Buffer:: ds OAM_OBJECT_SIZE * OAM_LIMIT
 Oam_Top:: dw
 Active_Sprite_Bank:: db
 Sprite_Buffer_0:: ds SPRITE_BUFFER_SIZE
@@ -164,6 +164,7 @@ GET_BUFFER: MACRO
 ; \2 ~> Label
 ; bc <~> Sprite
 ; d <~ Current offset
+; e ~> Size
 ; a <~ Next offset
 	ld a, [\1 + SPRITE_BUFFER_TOP]
 
@@ -183,6 +184,7 @@ SET_BUFFER: MACRO
 ; \1 ~> Sprite Buffer
 ; \2 ~> Sprite Offset
 ;	d  ~> Current offset
+; e ~> Size
 ; a  ~> Next offset
 ; bc <~> Sprite
 	ld [\1 + SPRITE_BUFFER_TOP], a
@@ -212,7 +214,6 @@ SET_BUFFER: MACRO
 	ld de, \1
 	MEMBER_POKE_WORD (SPRITE_BANK)
 
-
 	ENDM
 
 Sprite_Request::
@@ -240,32 +241,6 @@ Sprite_Request::
 
 .setBuffer2
 	SET_BUFFER Sprite_Buffer_2, (SPRITE_BANK_TOTAL * 2)
-	;jp Kernel_Panic
 
-	ret
-
-Oam_Request::
-; Request Sprites from Sprite_Buffer
-; hl ~> Size
-; de <~ Sprite_Top
-
-	; Preserve Size
-	push hl
-
-	; Put Oam_Top in HL
-	PEEK_WORD (Oam_Top)
-
-	; Refresh Size, preserve Oam Buffer and add Oam_Top for new Top
-	pop hl
-	push de
-	add hl, de
-
-	; Store new Oam_Top
-	ld d, h
-	ld e, l
-	POKE_WORD (Oam_Top)
-
-	; Return the Oam Buffer
-	pop de
 
 	ret

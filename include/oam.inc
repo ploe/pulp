@@ -11,7 +11,7 @@ SPRITE_X RB 1
 SPRITE_ATTRIBUTES RB 0
 SPRITE_TILE RB 1
 SPRITE_FLAGS RB 1
-SPRITE_OAM_OBJECT_SIZE RB 0
+OAM_OBJECT_SIZE RB 0
 SPRITE_FRAME RW 1
 SPRITE_INTERVAL RB 1
 SPRITE_TILE_DST RW 1
@@ -39,12 +39,26 @@ SPRITE_BUFFER_FLAG_REFRESH EQU 0
 
 OAM_LIMIT EQU 40
 
-OAM_SPRITE_REQUEST: MACRO
-; Return address of Sprite Buffer starts
-; \1 ~> Size
-; de <~ Sprite_Top address
-	ld hl, \1 * SPRITE_OAM_OBJECT_SIZE
-	call Oam_Request
+OAM_SET: MACRO
+; Using the offset in SPRITE_TILE calculate the location of the
+; SPRITE_OAM_BUFFER
+; \1 ~> Sprite
+	MEMBER_PEEK_BYTE (\1 + SPRITE_TILE)
+
+	; Multiply Tile by 4 as that's the Size of an OAM Object
+	ld d, 0
+	ld e, a
+	sla e
+	sla e
+
+	; Get the new offset
+	ld hl, Oam_Buffer
+	add hl, de
+
+	; Store the Oam Buffer offet
+	ld d, h
+	ld e, l
+	MEMBER_POKE_WORD (\1 + SPRITE_OAM_BUFFER)
 
 	ENDM
 

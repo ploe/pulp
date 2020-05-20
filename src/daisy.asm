@@ -132,7 +132,7 @@ Daisy_Animate:
 	ld [hl], a
 
 	; Load X into Sprite 1
-	ld de, SPRITE_SIZE
+	ld de, OAM_OBJECT_SIZE
 	add hl, de
 	ld [hl], a
 
@@ -140,12 +140,12 @@ Daisy_Animate:
 	add a, 8
 
 	; Load X into Sprite 2
-	ld de, SPRITE_SIZE
+	ld de, OAM_OBJECT_SIZE
 	add hl, de
 	ld [hl], a
 
 	; Load X into Sprite 3
-	ld de, SPRITE_SIZE
+	ld de, OAM_OBJECT_SIZE
 	add hl, de
 	ld [hl], a
 
@@ -161,19 +161,19 @@ Daisy_Animate:
 
 	; Load Y into Sprite 1
 	add a, 8
-	ld de, SPRITE_SIZE
+	ld de, OAM_OBJECT_SIZE
 	add hl, de
 	ld [hl], a
 
 	; Load Y into Sprite 2
 	sub a, 8
-	ld de, SPRITE_SIZE
+	ld de, OAM_OBJECT_SIZE
 	add hl, de
 	ld [hl], a
 
 	; Load Y into Sprite 3
 	add a, 8
-	ld de, SPRITE_SIZE
+	ld de, OAM_OBJECT_SIZE
 	add hl, de
 	ld [hl], a
 
@@ -282,6 +282,25 @@ Daisy_Animate:
 
 	YIELD
 
+DAISY_SPAWN: MACRO
+	call Daisy_Init
+
+	ld a, \1
+	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_Y)
+
+	ld a, \2
+	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_X)
+
+	ENDM
+
+Daisy_Spawn::
+	DAISY_SPAWN $33, $33
+	DAISY_SPAWN $66, $66
+	;DAISY_SPAWN $99, $99
+	DAISY_SPAWN $33, $99
+
+	ret
+
 Daisy_Init::
 ; Setup a Daisy actor
 ; bc <~ This
@@ -300,10 +319,6 @@ Daisy_Init::
 	ld de, DAISY_REEL
 	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_FRAME)
 
-	; Ask OAM for Sprite Buffer
-	OAM_SPRITE_REQUEST (DAISY_MASS)
-	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_OAM_BUFFER)
-
 	; Set the Tile offset and Tile Dst to tile offset in VRAM
 	MEMBER_ADDRESS (DAISY_SPRITE)
 	ld b, h
@@ -316,9 +331,7 @@ Daisy_Init::
 	; Refresh our actor
 	pop bc
 
-	ld a, $33
-	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_Y)
-	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_X)
+	OAM_SET (DAISY_SPRITE)
 
 	; Get Tile
 	MEMBER_PEEK_BYTE (DAISY_SPRITE + SPRITE_TILE)
@@ -332,20 +345,24 @@ Daisy_Init::
 
 	; Load Tile in to Sprite 1
 	inc a
-	ld de, SPRITE_SIZE
+	ld de, OAM_OBJECT_SIZE
 	add hl, de
 	ld [hl], a
 
 	; Load Tile in to Sprite 2
 	inc a
-	ld de, SPRITE_SIZE
+	ld de, OAM_OBJECT_SIZE
 	add hl, de
 	ld [hl], a
 
 	; Load Tile in to Sprite 3
 	inc a
-	ld de, SPRITE_SIZE
+	ld de, OAM_OBJECT_SIZE
 	add hl, de
 	ld [hl], a
+
+	; Set Sprite as updated so animates on first page
+	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_STATUS)
+	set SPRITE_FLAG_UPDATED, [hl]
 
 	ret

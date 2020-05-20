@@ -76,9 +76,10 @@ Kernel_Init::
 	call Sound_Init
 
 	call Oam_Reset
+
 	call Blob_Spawn_All
-	call Daisy_Init
-	
+	call Daisy_Spawn
+	call Blob_Spawn_2
 
 	call Display_Start
 
