@@ -55,6 +55,97 @@ MEMBER_TO_THIS: MACRO
 
 Daisy_Animate:
 ; bc <~> This
+	; If Interval is 0 we pick the nextFrame
+	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_INTERVAL)
+	dec [hl]
+	jr z, .nextFrame
+
+	jp .updateOffset
+
+.nextFrame
+; When the Interval has elapsed we load increment the frame.
+
+	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_STATUS)
+	set SPRITE_FLAG_UPDATED, [hl]
+
+	; Put next Frame in BC
+	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_FRAME)
+	ld hl, FRAME_SIZE
+	add hl, de
+	ld b, h
+	ld c, l
+
+	; If Interval is REEL_SENTINEL we jump to the next reel
+	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
+	and a
+	jr z, .jumpReel
+
+	; Preserve Frame address
+	ld d, b
+	ld e, c
+
+	ACTOR_THIS
+
+	; Set Frame
+	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_FRAME)
+
+	; Set Animation Interval
+	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_INTERVAL)
+
+	jr .updateOffset
+
+.jumpReel
+; When we've passed the last Frame we jump to a new Reel.
+
+	; Get the Next Reel and set BC to it
+	MEMBER_PEEK_WORD (FRAME_NEXT_REEL)
+	ld b, d
+	ld c, e
+
+	; Preserve Interval
+	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
+
+	; Preserve Frame
+	ld d, b
+	ld e, c
+
+	ACTOR_THIS
+
+	; Set Frame
+	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_FRAME)
+
+	; Set Animation Interval
+	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_INTERVAL)
+
+	jr .updateOffset
+
+.updateOffset
+; Amend the Oam Buffer's Offset
+
+	; Preserve the Sprite Offset
+	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_OFFSET)
+	push de
+
+	; Put offset address of Oam Buffer in HL
+	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_OAM_BUFFER)
+	ld hl, (SPRITE_OFFSET)
+	add hl, de
+
+	; Set offset of Oam Buffer
+	pop de
+	ld [hl], e
+	inc hl
+	ld [hl], d
+
+.ifUpdated
+; YIELD if Sprite does not need updated
+
+	; Don't update VRAM if Sprite not updated
+	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_STATUS)
+	bit SPRITE_FLAG_UPDATED, [hl]
+	jr nz, .ifBankRefresh
+
+	YIELD
 
 .ifBankRefresh
 ; YIELD if the Sprite Bank isn't on a REFRESH step
@@ -184,5 +275,9 @@ Daisy_Init::
 
 	; Refresh our actor
 	pop bc
+
+	ld a, $33
+	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_Y)
+	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_X)
 
 	ret
