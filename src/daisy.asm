@@ -29,14 +29,42 @@ INCBIN "daisy.2bpp"
 Daisy_Spritesheet_End:
 DAISY_SHEET_SIZE EQU (Daisy_Spritesheet_End - Daisy_Spritesheet)
 
-DAISY_REEL:
+DAISY_REEL_DOWN:
 	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 1, 0
 	REEL_CLIP 12, Daisy_Spritesheet, 0, 0
 	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 1, 0
 	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 2, 0
-	REEL_JUMP DAISY_REEL
+	REEL_JUMP DAISY_REEL_DOWN
+
+DAISY_REEL_UP:
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 4, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 3, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 4, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 5, 0
+	REEL_JUMP DAISY_REEL_UP
+
 
 Daisy_Update:
+	CONTROLLER_KEY_CHANGED CONTROLLER_DOWN, .faceDown
+	CONTROLLER_KEY_CHANGED CONTROLLER_UP, .faceUp
+
+	YIELD
+
+.faceDown
+	ld de, DAISY_REEL_DOWN
+
+	jr .updateSprite
+
+.faceUp
+	ld de, DAISY_REEL_UP
+
+
+	jr .updateSprite
+
+.updateSprite
+	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_FRAME)
+
+	MEMBER_BIT set, (DAISY_SPRITE + SPRITE_STATUS), SPRITE_FLAG_UPDATED
 
 	YIELD
 
@@ -316,7 +344,7 @@ Daisy_Init::
 	ld de, DAISY_TYPE
 	MEMBER_POKE_WORD (ACTOR_TYPE)
 
-	ld de, DAISY_REEL
+	ld de, DAISY_REEL_DOWN
 	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_FRAME)
 
 	; Set the Tile offset and Tile Dst to tile offset in VRAM
