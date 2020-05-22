@@ -50,13 +50,21 @@ DAISY_REEL_LEFT:
 	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 8, 0
 	REEL_JUMP DAISY_REEL_LEFT
 
+DAISY_REEL_RIGHT:
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 10, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 9, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 10, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 11, 0
+	REEL_JUMP DAISY_REEL_RIGHT
+
 
 Daisy_Update:
 	CONTROLLER_KEY_CHANGED CONTROLLER_DOWN, .faceDown
 	CONTROLLER_KEY_CHANGED CONTROLLER_UP, .faceUp
 	CONTROLLER_KEY_CHANGED CONTROLLER_LEFT, .faceLeft
+	CONTROLLER_KEY_CHANGED CONTROLLER_RIGHT, .faceRight
 
-	YIELD
+	jr .moveY
 
 .faceDown
 	ld de, DAISY_REEL_DOWN
@@ -66,12 +74,15 @@ Daisy_Update:
 .faceUp
 	ld de, DAISY_REEL_UP
 
-
 	jr .updateSprite
 
 .faceLeft
 	ld de, DAISY_REEL_LEFT
 
+	jr .updateSprite
+
+.faceRight
+	ld de, DAISY_REEL_RIGHT
 
 	jr .updateSprite
 
@@ -81,6 +92,43 @@ Daisy_Update:
 	MEMBER_BIT set, (DAISY_SPRITE + SPRITE_STATUS), SPRITE_FLAG_UPDATED
 
 	YIELD
+
+.moveY
+	CONTROLLER_KEY_HELD CONTROLLER_DOWN, .moveDown
+	CONTROLLER_KEY_HELD CONTROLLER_UP, .moveUp
+
+	jr .moveX
+
+.moveDown
+	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_Y)
+	inc [hl]
+
+	jr .moveX
+
+.moveUp
+	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_Y)
+	dec [hl]
+
+	jr .moveX
+
+.moveX
+	CONTROLLER_KEY_HELD CONTROLLER_LEFT, .moveLeft
+	CONTROLLER_KEY_HELD CONTROLLER_RIGHT, .moveRight
+
+	YIELD
+
+.moveLeft
+	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_X)
+	dec [hl]
+
+	YIELD
+
+.moveRight
+	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_X)
+	inc [hl]
+
+	YIELD
+
 
 MEMBER_TO_THIS: MACRO
 ; \1 ~> Member
