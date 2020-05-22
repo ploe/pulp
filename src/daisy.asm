@@ -43,10 +43,18 @@ DAISY_REEL_UP:
 	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 5, 0
 	REEL_JUMP DAISY_REEL_UP
 
+DAISY_REEL_LEFT:
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 7, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 6, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 7, 0
+	REEL_CLIP 12, Daisy_Spritesheet, DAISY_MASS * 8, 0
+	REEL_JUMP DAISY_REEL_LEFT
+
 
 Daisy_Update:
 	CONTROLLER_KEY_CHANGED CONTROLLER_DOWN, .faceDown
 	CONTROLLER_KEY_CHANGED CONTROLLER_UP, .faceUp
+	CONTROLLER_KEY_CHANGED CONTROLLER_LEFT, .faceLeft
 
 	YIELD
 
@@ -57,6 +65,12 @@ Daisy_Update:
 
 .faceUp
 	ld de, DAISY_REEL_UP
+
+
+	jr .updateSprite
+
+.faceLeft
+	ld de, DAISY_REEL_LEFT
 
 
 	jr .updateSprite
