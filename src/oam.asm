@@ -86,6 +86,249 @@ Oam_Next_Sprite_Bank::
 
 	ret
 
+
+GOTO_SET_OAM_BUFFER: MACRO
+; Loads SPRITE_METHOD_SET_OAM and jumps to it
+	MEMBER_PEEK_WORD (SPRITE_METHOD_SET_OAM)
+	ld h, d
+	ld l, e
+	jp hl
+
+	ENDM
+
+Sprite_Animate::
+; General purpose routine for animating Sprites
+; Updates the Interval, Frame and Reel and jumps to SPRITE_METHOD_SET_OAM
+; bc ~> Sprite
+	MEMBER_ADDRESS (SPRITE_INTERVAL)
+	dec [hl]
+	jr z, .nextFrame
+
+	GOTO_SET_OAM_BUFFER
+
+.nextFrame
+; When the Interval has elapsed we load increment the frame.
+
+	; If we get this far mark the Sprite as updated
+	MEMBER_ADDRESS (SPRITE_STATUS)
+	set SPRITE_FLAG_UPDATED, [hl]
+
+	; Put next Frame in DE
+	MEMBER_PEEK_WORD (SPRITE_FRAME)
+	ld hl, (FRAME_SIZE)
+	add hl, de
+	ld d, h
+	ld e, l
+
+	; If Interval is REEL_SENTINEL we jump to the next reel
+	ld hl, FRAME_INTERVAL
+	add hl, de
+	ld a, [hl]
+	and a
+	jr z, .jumpReel
+
+	; Set Frame
+	MEMBER_POKE_WORD (SPRITE_FRAME)
+
+	; Set Interval
+	MEMBER_POKE_BYTE (SPRITE_INTERVAL)
+
+	GOTO_SET_OAM_BUFFER
+
+.jumpReel
+; When we've passed the last Frame we jump to a new Reel.
+
+	; Get the Next Reel and set DE to it
+	ld hl, FRAME_NEXT_REEL
+	add hl, de
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+
+	; Get Interval
+	ld hl, FRAME_INTERVAL
+	add hl, de
+	ld a, [hl]
+
+	; Set Frame
+	MEMBER_POKE_WORD (SPRITE_FRAME)
+
+	; Set Interval
+	MEMBER_POKE_BYTE (SPRITE_INTERVAL)
+
+	GOTO_SET_OAM_BUFFER
+
+Sprite_Set_Oam_Buffer_2x2::
+; Amend the Oam Buffer's Offset
+
+	MEMBER_PEEK_BYTE (SPRITE_X)
+
+	MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+	ld hl, SPRITE_X
+	add hl, de
+
+	; Load X into Sprite 0
+	ld [hl], a
+
+	; Load X into Sprite 1
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Increment X by 8
+	add a, 8
+
+	; Load X into Sprite 2
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Load X into Sprite 3
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Get X offset
+	MEMBER_PEEK_BYTE (SPRITE_Y)
+
+	MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+	ld hl, SPRITE_Y
+	add hl, de
+
+	; Load Y into Sprite 0
+	ld [hl], a
+
+	; Load Y into Sprite 1
+	add a, 8
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Load Y into Sprite 2
+	sub a, 8
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
+
+	; Load Y into Sprite 3
+	add a, 8
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
+
+	jp Sprite_UpdateBank
+
+Sprite_UpdateBank::
+; ret if Sprite does not need updated
+
+	; Don't update VRAM if Sprite not updated
+	MEMBER_ADDRESS (SPRITE_STATUS)
+	bit SPRITE_FLAG_UPDATED, [hl]
+	jr nz, .ifBankRefresh
+
+	ret
+
+.ifBankRefresh
+; ret if the Sprite Bank isn't on a REFRESH step
+
+	MEMBER_PEEK_WORD (SPRITE_BANK)
+	ld hl, SPRITE_BUFFER_FLAGS
+	add hl, de
+	bit SPRITE_BUFFER_FLAG_REFRESH, [hl]
+	jr nz, .updateAttributes
+
+	ret
+
+.updateAttributes
+; Update the Oam Buffer's Attributes
+
+	; Preserve Sprite
+	push bc
+
+	; Put Sprite Flags in D
+	MEMBER_PEEK_WORD (SPRITE_FRAME)
+	ld hl, FRAME_SPRITE_FLAGS
+	add hl, de
+	ld d, [hl]
+	MEMBER_ADDRESS (SPRITE_FLAGS)
+	ld [hl], d
+
+	; Preserve the Sprite Attributes
+	MEMBER_PEEK_BYTE (SPRITE_TILE)
+	ld e, a
+	push de
+
+	; Get the Sprite Buffer and put it in BC
+	MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+	ld b, d
+	ld c, e
+
+	; Write the Sprite Attributes to the Sprite Buffer
+	pop de
+	MEMBER_POKE_WORD (SPRITE_ATTRIBUTES)
+
+	; Refresh Sprite
+	pop bc
+
+	; Put Tile Src in DE
+	MEMBER_PEEK_WORD (SPRITE_FRAME)
+	ld hl, FRAME_TILE_SRC
+	add hl, de
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+
+	; Set Animation Tile Src
+	MEMBER_POKE_WORD (SPRITE_TILE_SRC)
+
+.copySprite
+; Set up to copy the Sprite to the buffer
+
+	; Preserve Sprite
+	push bc
+
+	; Get Tile Dst and preserve it
+	MEMBER_PEEK_WORD (SPRITE_TILE_DST)
+	push de
+
+	; Get and preserve Total Bytes
+	MEMBER_PEEK_WORD (SPRITE_TOTAL_BYTES)
+	push de
+
+	; Get the Tile Src
+	MEMBER_PEEK_WORD (SPRITE_TILE_SRC)
+
+	; Refresh Total Bytes
+	pop bc
+
+	; Refresh Tile Dst
+	pop hl
+
+.nextByte
+	; Put source in to destination
+	ld a, [de]
+	ld [hl], a
+
+	; Set  up for the nextByte
+	inc hl
+	inc de
+	dec bc
+
+	; If we have zero bytes left to copy we exit
+	ld a, c
+	or b
+	jr nz, .nextByte
+
+	; Refresh This
+	pop bc
+
+	; Sprite no longer needs to update
+	MEMBER_ADDRESS (SPRITE_STATUS)
+	res SPRITE_FLAG_UPDATED, [hl]
+
+	ret
+
+
 Oam_Blit_Setup::
 ; Puts the VRAM bank and buffers in the correct registers for Oam_Blit_Tiles
 ; hl <~ Active Source

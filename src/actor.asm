@@ -35,6 +35,7 @@ Actor_Pipeline_Next::
 ; Get the next Actor to call the Pipeline method on
 ; bc <~ Actor_Pipeline_Signal
 ; hl <~ This->Next
+	ACTOR_THIS
 
 	; If we're at the end of the Actors, we break
 	MEMBER_PEEK_WORD (ACTOR_NEXT)

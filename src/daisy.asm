@@ -129,7 +129,6 @@ Daisy_Update:
 
 	YIELD
 
-
 MEMBER_TO_THIS: MACRO
 ; \1 ~> Member
 ; bc ~> This
@@ -144,235 +143,16 @@ MEMBER_TO_THIS: MACRO
 	ENDM
 
 Daisy_Animate:
-; bc <~> This
+; Sets BC to Sprite and hands over to general Sprite animate function
+; bc ~> This
+; bc <~ Sprite
+
 	; If Interval is 0 we pick the nextFrame
 	MEMBER_ADDRESS (DAISY_SPRITE)
 	ld b, h
 	ld c, l
 
-	jp Sprite_Animate
-
-Sprite_Animate::
-; bc ~> Sprite
-	MEMBER_ADDRESS (SPRITE_INTERVAL)
-	dec [hl]
-	jr z, .nextFrame
-
-	jp .updateOffset
-
-.nextFrame
-; When the Interval has elapsed we load increment the frame.
-
-	; If we get this far mark the Sprite as updated
-	MEMBER_ADDRESS (SPRITE_STATUS)
-	set SPRITE_FLAG_UPDATED, [hl]
-
-	; Put next Frame in DE
-	MEMBER_PEEK_WORD (SPRITE_FRAME)
-	ld hl, (FRAME_SIZE)
-	add hl, de
-	ld d, h
-	ld e, l
-
-	; If Interval is REEL_SENTINEL we jump to the next reel
-	ld hl, FRAME_INTERVAL
-	add hl, de
-	ld a, [hl]
-	and a
-	jr z, .jumpReel
-
-	; Set Frame
-	MEMBER_POKE_WORD (SPRITE_FRAME)
-
-	; Set Interval
-	MEMBER_POKE_BYTE (SPRITE_INTERVAL)
-
-	jr .updateOffset
-
-.jumpReel
-; When we've passed the last Frame we jump to a new Reel.
-
-	; Get the Next Reel and set DE to it
-	ld hl, FRAME_NEXT_REEL
-	add hl, de
-	ld e, [hl]
-	inc hl
-	ld d, [hl]
-
-	; Get Interval
-	ld hl, FRAME_INTERVAL
-	add hl, de
-	ld a, [hl]
-
-	; Set Frame
-	MEMBER_POKE_WORD (SPRITE_FRAME)
-
-	; Set Interval
-	MEMBER_POKE_BYTE (SPRITE_INTERVAL)
-
-	jr .updateOffset
-
-.updateOffset
-; Amend the Oam Buffer's Offset
-	ACTOR_THIS
-
-	MEMBER_PEEK_BYTE (DAISY_SPRITE + SPRITE_X)
-
-	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_OAM_BUFFER)
-	ld hl, SPRITE_X
-	add hl, de
-
-	; Load X into Sprite 0
-	ld [hl], a
-
-	; Load X into Sprite 1
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-	; Increment X by 8
-	add a, 8
-
-	; Load X into Sprite 2
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-	; Load X into Sprite 3
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-	; Get X offset
-	MEMBER_PEEK_BYTE (DAISY_SPRITE + SPRITE_Y)
-
-	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_OAM_BUFFER)
-	ld hl, SPRITE_Y
-	add hl, de
-
-	; Load Y into Sprite 0
-	ld [hl], a
-
-	; Load Y into Sprite 1
-	add a, 8
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-	; Load Y into Sprite 2
-	sub a, 8
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-	; Load Y into Sprite 3
-	add a, 8
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-.ifUpdated
-; YIELD if Sprite does not need updated
-
-	; Don't update VRAM if Sprite not updated
-	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_STATUS)
-	bit SPRITE_FLAG_UPDATED, [hl]
-	jr nz, .ifBankRefresh
-
-	YIELD
-
-.ifBankRefresh
-; YIELD if the Sprite Bank isn't on a REFRESH step
-
-	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_BANK)
-	ld hl, SPRITE_BUFFER_FLAGS
-	add hl, de
-	bit SPRITE_BUFFER_FLAG_REFRESH, [hl]
-	jr nz, .updateAttributes
-
-	YIELD
-
-.updateAttributes
-; Update the Oam Buffer's Attributes
-
-	; Preserve This
-	push bc
-
-	; Put Sprite Flags in D
-	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_FRAME)
-	ld hl, FRAME_SPRITE_FLAGS
-	add hl, de
-	ld d, [hl]
-	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_FLAGS)
-	ld [hl], d
-
-	; Preserve the Sprite Attributes
-	MEMBER_PEEK_BYTE (DAISY_SPRITE + SPRITE_TILE)
-	ld e, a
-	push de
-
-	; Get the Sprite Buffer and put it in BC
-	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_OAM_BUFFER)
-	ld b, d
-	ld c, e
-
-	; Write the Sprite Attributes to the Sprite Buffer
-	pop de
-	MEMBER_POKE_WORD (SPRITE_ATTRIBUTES)
-
-	; Refresh This
-	pop bc
-
-	; Put Tile Src in DE
-	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_FRAME)
-	ld hl, FRAME_TILE_SRC
-	add hl, de
-	ld e, [hl]
-	inc hl
-	ld d, [hl]
-
-	; Set Animation Tile Src
-	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_TILE_SRC)
-
-.copySprite
-
-	; Preserve This
-	push bc
-
-	; Get Tile Dst and preserve it
-	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_TILE_DST)
-	push de
-
-	; Get the Tile Src
-	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_TILE_SRC)
-
-	; Refresh Tile Dst
-	pop hl
-
-	; Number of Tiles to copy
-	ld bc, (TILE_SIZE * DAISY_MASS)
-
-.nextByte
-	; Put source in to destination
-	ld a, [de]
-	ld [hl], a
-
-	; Set  up for the nextByte
-	inc hl
-	inc de
-	dec bc
-
-	; If we have zero bytes left to copy we exit
-	ld a, c
-	or b
-	jr nz, .nextByte
-
-	; Refresh This
-	pop bc
-
-	; Sprite no longer needs to update
-	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_STATUS)
-	res SPRITE_FLAG_UPDATED, [hl]
+	call Sprite_Animate
 
 	YIELD
 
@@ -412,6 +192,12 @@ Daisy_Init::
 
 	ld de, DAISY_REEL_DOWN
 	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_FRAME)
+
+	ld de, Sprite_Set_Oam_Buffer_2x2
+	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_METHOD_SET_OAM)
+
+	ld de, (TILE_SIZE * DAISY_MASS)
+	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_TOTAL_BYTES)
 
 	; Set the Tile offset and Tile Dst to tile offset in VRAM
 	MEMBER_ADDRESS (DAISY_SPRITE)
