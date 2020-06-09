@@ -146,7 +146,15 @@ MEMBER_TO_THIS: MACRO
 Daisy_Animate:
 ; bc <~> This
 	; If Interval is 0 we pick the nextFrame
-	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_INTERVAL)
+	MEMBER_ADDRESS (DAISY_SPRITE)
+	ld b, h
+	ld c, l
+
+	jp Sprite_Animate
+
+Sprite_Animate::
+; bc ~> Sprite
+	MEMBER_ADDRESS (SPRITE_INTERVAL)
 	dec [hl]
 	jr z, .nextFrame
 
@@ -155,62 +163,58 @@ Daisy_Animate:
 .nextFrame
 ; When the Interval has elapsed we load increment the frame.
 
-	MEMBER_ADDRESS (DAISY_SPRITE + SPRITE_STATUS)
+	; If we get this far mark the Sprite as updated
+	MEMBER_ADDRESS (SPRITE_STATUS)
 	set SPRITE_FLAG_UPDATED, [hl]
 
-	; Put next Frame in BC
-	MEMBER_PEEK_WORD (DAISY_SPRITE + SPRITE_FRAME)
-	ld hl, FRAME_SIZE
+	; Put next Frame in DE
+	MEMBER_PEEK_WORD (SPRITE_FRAME)
+	ld hl, (FRAME_SIZE)
 	add hl, de
-	ld b, h
-	ld c, l
+	ld d, h
+	ld e, l
 
 	; If Interval is REEL_SENTINEL we jump to the next reel
-	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
+	ld hl, FRAME_INTERVAL
+	add hl, de
+	ld a, [hl]
 	and a
 	jr z, .jumpReel
 
-	; Preserve Frame address
-	ld d, b
-	ld e, c
-
-	ACTOR_THIS
-
 	; Set Frame
-	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_FRAME)
+	MEMBER_POKE_WORD (SPRITE_FRAME)
 
-	; Set Animation Interval
-	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_INTERVAL)
+	; Set Interval
+	MEMBER_POKE_BYTE (SPRITE_INTERVAL)
 
 	jr .updateOffset
 
 .jumpReel
 ; When we've passed the last Frame we jump to a new Reel.
 
-	; Get the Next Reel and set BC to it
-	MEMBER_PEEK_WORD (FRAME_NEXT_REEL)
-	ld b, d
-	ld c, e
+	; Get the Next Reel and set DE to it
+	ld hl, FRAME_NEXT_REEL
+	add hl, de
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
 
-	; Preserve Interval
-	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
-
-	; Preserve Frame
-	ld d, b
-	ld e, c
-
-	ACTOR_THIS
+	; Get Interval
+	ld hl, FRAME_INTERVAL
+	add hl, de
+	ld a, [hl]
 
 	; Set Frame
-	MEMBER_POKE_WORD (DAISY_SPRITE + SPRITE_FRAME)
+	MEMBER_POKE_WORD (SPRITE_FRAME)
 
-	; Set Animation Interval
-	MEMBER_POKE_BYTE (DAISY_SPRITE + SPRITE_INTERVAL)
+	; Set Interval
+	MEMBER_POKE_BYTE (SPRITE_INTERVAL)
 
 	jr .updateOffset
 
 .updateOffset
 ; Amend the Oam Buffer's Offset
+	ACTOR_THIS
 
 	MEMBER_PEEK_BYTE (DAISY_SPRITE + SPRITE_X)
 
