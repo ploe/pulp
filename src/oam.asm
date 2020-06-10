@@ -158,66 +158,6 @@ Sprite_Animate::
 
 	GOTO_SET_OAM_BUFFER
 
-Sprite_Set_Oam_Buffer_2x2::
-; Amend the Oam Buffer's Offset
-
-	MEMBER_PEEK_BYTE (SPRITE_X)
-
-	MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
-	ld hl, SPRITE_X
-	add hl, de
-
-	; Load X into Sprite 0
-	ld [hl], a
-
-	; Load X into Sprite 1
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-	; Increment X by 8
-	add a, 8
-
-	; Load X into Sprite 2
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-	; Load X into Sprite 3
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-	; Get X offset
-	MEMBER_PEEK_BYTE (SPRITE_Y)
-
-	MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
-	ld hl, SPRITE_Y
-	add hl, de
-
-	; Load Y into Sprite 0
-	ld [hl], a
-
-	; Load Y into Sprite 1
-	add a, 8
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-	; Load Y into Sprite 2
-	sub a, 8
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-	; Load Y into Sprite 3
-	add a, 8
-	ld de, OAM_OBJECT_SIZE
-	add hl, de
-	ld [hl], a
-
-	jp Sprite_UpdateBank
-
 Sprite_UpdateBank::
 ; ret if Sprite does not need updated
 
@@ -328,6 +268,85 @@ Sprite_UpdateBank::
 
 	ret
 
+Sprite_Set_Oam_Buffer_1x1::
+; Amend the Oam Buffer's Offset
+
+		; Preserve the Sprite Offset
+		MEMBER_PEEK_WORD (SPRITE_OFFSET)
+		push de
+
+		; Put offset address of Oam Buffer in HL
+		MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+		ld hl, (SPRITE_OFFSET)
+		add hl, de
+
+		; Set offset of Oam Buffer
+		pop de
+		ld [hl], e
+		inc hl
+		ld [hl], d
+
+		jp Sprite_UpdateBank
+
+Sprite_Set_Oam_Buffer_2x2::
+	; Amend the Oam Buffer's Offset
+
+		MEMBER_PEEK_BYTE (SPRITE_X)
+
+		MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+		ld hl, SPRITE_X
+		add hl, de
+
+		; Load X into Sprite 0
+		ld [hl], a
+
+		; Load X into Sprite 1
+		ld de, OAM_OBJECT_SIZE
+		add hl, de
+		ld [hl], a
+
+		; Increment X by 8
+		add a, 8
+
+		; Load X into Sprite 2
+		ld de, OAM_OBJECT_SIZE
+		add hl, de
+		ld [hl], a
+
+		; Load X into Sprite 3
+		ld de, OAM_OBJECT_SIZE
+		add hl, de
+		ld [hl], a
+
+		; Get X offset
+		MEMBER_PEEK_BYTE (SPRITE_Y)
+
+		MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+		ld hl, SPRITE_Y
+		add hl, de
+
+		; Load Y into Sprite 0
+		ld [hl], a
+
+		; Load Y into Sprite 1
+		add a, 8
+		ld de, OAM_OBJECT_SIZE
+		add hl, de
+		ld [hl], a
+
+		; Load Y into Sprite 2
+		sub a, 8
+		ld de, OAM_OBJECT_SIZE
+		add hl, de
+		ld [hl], a
+
+		; Load Y into Sprite 3
+		add a, 8
+		ld de, OAM_OBJECT_SIZE
+		add hl, de
+		ld [hl], a
+
+		jp Sprite_UpdateBank
 
 Oam_Blit_Setup::
 ; Puts the VRAM bank and buffers in the correct registers for Oam_Blit_Tiles

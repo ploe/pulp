@@ -70,193 +70,16 @@ BLOB_REEL_RIGHT:
 	REEL_JUMP BLOB_REEL_RIGHT
 
 Blob_Animate:
-; Animate Pipeline Method for Blob type
-; bc <~> This
+; Sets BC to Sprite and hands over to general Sprite animate function
+; bc ~> This
+; bc <~ Sprite
 
 	; If Interval is 0 we pick the nextFrame
-	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_INTERVAL)
-	dec [hl]
-	jr z, .nextFrame
-
-	jp .updateOffset
-
-.nextFrame
-; When the Interval has elapsed we load increment the frame.
-
-	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_STATUS)
-	set SPRITE_FLAG_UPDATED, [hl]
-
-	; Put next Frame in BC
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_FRAME)
-	ld hl, FRAME_SIZE
-	add hl, de
+	MEMBER_ADDRESS (BLOB_SPRITE)
 	ld b, h
 	ld c, l
 
-	; If Interval is REEL_SENTINEL we jump to the next reel
-	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
-	and a
-	jr z, .jumpReel
-
-	; Preserve Frame address
-	ld d, b
-	ld e, c
-
-	ACTOR_THIS
-
-	; Set Frame
-	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
-
-	; Set Animation Interval
-	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_INTERVAL)
-
-	jr .updateOffset
-
-.jumpReel
-; When we've passed the last Frame we jump to a new Reel.
-
-	; Get the Next Reel and set BC to it
-	MEMBER_PEEK_WORD (FRAME_NEXT_REEL)
-	ld b, d
-	ld c, e
-
-	; Preserve Interval
-	MEMBER_PEEK_BYTE (FRAME_INTERVAL)
-
-	; Preserve Frame
-	ld d, b
-	ld e, c
-
-	ACTOR_THIS
-
-	; Set Frame
-	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_FRAME)
-
-	; Set Animation Interval
-	MEMBER_POKE_BYTE (BLOB_SPRITE + SPRITE_INTERVAL)
-
-	jr .updateOffset
-
-.updateOffset
-; Amend the Oam Buffer's Offset
-
-	; Preserve the Sprite Offset
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_OFFSET)
-	push de
-
-	; Put offset address of Oam Buffer in HL
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_OAM_BUFFER)
-	ld hl, (SPRITE_OFFSET)
-	add hl, de
-
-	; Set offset of Oam Buffer
-	pop de
-	ld [hl], e
-	inc hl
-	ld [hl], d
-
-.ifUpdated
-; YIELD if Sprite does not need updated
-
-	; Don't update VRAM if Sprite not updated
-	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_STATUS)
-	bit SPRITE_FLAG_UPDATED, [hl]
-	jr nz, .ifBankRefresh
-
-	YIELD
-
-.ifBankRefresh
-; YIELD if the Sprite Bank isn't on a REFRESH step
-
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_BANK)
-	ld hl, SPRITE_BUFFER_FLAGS
-	add hl, de
-	bit SPRITE_BUFFER_FLAG_REFRESH, [hl]
-	jr nz, .updateAttributes
-
-	YIELD
-
-.updateAttributes
-; Update the Oam Buffer's Attributes
-
-	; Preserve This
-	push bc
-
-	; Put Sprite Flags in D
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_FRAME)
-	ld hl, FRAME_SPRITE_FLAGS
-	add hl, de
-	ld d, [hl]
-	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_FLAGS)
-	ld [hl], d
-
-	; Preserve the Sprite Attributes
-	MEMBER_PEEK_BYTE (BLOB_SPRITE + SPRITE_TILE)
-	ld e, a
-	push de
-
-	; Get the Sprite Buffer and put it in BC
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_OAM_BUFFER)
-	ld b, d
-	ld c, e
-
-	; Write the Sprite Attributes to the Sprite Buffer
-	pop de
-	MEMBER_POKE_WORD (SPRITE_ATTRIBUTES)
-
-	; Refresh This
-	pop bc
-
-	; Put Tile Src in DE
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_FRAME)
-	ld hl, FRAME_TILE_SRC
-	add hl, de
-	ld e, [hl]
-	inc hl
-	ld d, [hl]
-
-	; Set Animation Tile Src
-	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_TILE_SRC)
-
-.copySprite
-
-	; Preserve This
-	push bc
-
-	; Get Tile Dst and preserve it
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_TILE_DST)
-	push de
-
-	; Get the Tile Src
-	MEMBER_PEEK_WORD (BLOB_SPRITE + SPRITE_TILE_SRC)
-
-	; Refresh Tile Dst
-	pop hl
-
-	; Number of Tiles to copy
-	ld bc, (TILE_SIZE * BLOB_MASS)
-
-.nextByte
-	; Put source in to destination
-	ld a, [de]
-	ld [hl], a
-
-	; Set  up for the nextByte
-	inc hl
-	inc de
-	dec bc
-
-	; If we have zero bytes left to copy we exit
-	ld a, c
-	or b
-	jr nz, .nextByte
-
-	; Refresh This
-	pop bc
-
-	; Sprite no longer needs to update
-	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_STATUS)
-	res SPRITE_FLAG_UPDATED, [hl]
+	call Sprite_Animate
 
 	YIELD
 
@@ -275,6 +98,12 @@ Blob_Init::
 	ld de, BLOB_TYPE
 	MEMBER_POKE_WORD (ACTOR_TYPE)
 
+	ld de, Sprite_Set_Oam_Buffer_1x1
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_METHOD_SET_OAM)
+
+	ld de, (TILE_SIZE * BLOB_MASS)
+	MEMBER_POKE_WORD (BLOB_SPRITE + SPRITE_TOTAL_BYTES)
+
 	; Set Sprite as updated so animates on first page
 	MEMBER_ADDRESS (BLOB_SPRITE + SPRITE_STATUS)
 	set SPRITE_FLAG_UPDATED, [hl]
@@ -292,7 +121,6 @@ Blob_Init::
 	pop bc
 
 	OAM_SET (BLOB_SPRITE)
-
 
 	ret
 
