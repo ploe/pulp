@@ -79,6 +79,7 @@ Kernel_Init::
 
 	call Blob_Spawn_All
 	call Daisy_Spawn
+	call Stick_Init
 	call Blob_Spawn_2
 
 	call Display_Start

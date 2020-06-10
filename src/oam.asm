@@ -288,6 +288,41 @@ Sprite_Set_Oam_Buffer_1x1::
 
 		jp Sprite_UpdateBank
 
+Sprite_Set_Oam_Buffer_2x1::
+	; Amend the Oam Buffer's Offset
+
+		MEMBER_PEEK_BYTE (SPRITE_X)
+
+		MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+		ld hl, SPRITE_X
+		add hl, de
+
+		; Load X into Sprite 0
+		ld [hl], a
+
+		; Load X into Sprite 1
+		ld de, OAM_OBJECT_SIZE
+		add hl, de
+		ld [hl], a
+
+		; Get Y offset
+		MEMBER_PEEK_BYTE (SPRITE_Y)
+
+		MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+		ld hl, SPRITE_Y
+		add hl, de
+
+		; Load Y into Sprite 0
+		ld [hl], a
+
+		; Load Y into Sprite 1
+		add a, 8
+		ld de, OAM_OBJECT_SIZE
+		add hl, de
+		ld [hl], a
+
+		jp Sprite_UpdateBank
+
 Sprite_Set_Oam_Buffer_2x2::
 	; Amend the Oam Buffer's Offset
 
