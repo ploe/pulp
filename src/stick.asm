@@ -29,7 +29,7 @@ Stick_Spritesheet_End:
 STICK_SHEET_SIZE EQU (Stick_Spritesheet_End - Stick_Spritesheet)
 
 STICK_REEL:
-	REEL_CLIP 255, Stick_Spritesheet, 0, 0
+	REEL_CLIP 0, Stick_Spritesheet, 0, 0
 	REEL_JUMP STICK_REEL
 
 Stick_Update:
@@ -45,7 +45,7 @@ Stick_Animate:
 	ld b, h
 	ld c, l
 
-	call Sprite_Animate
+	call Sprite_Set_Oam_Buffer_2x1
 
 	YIELD
 
@@ -66,9 +66,6 @@ Stick_Init::
 
 	ld de, STICK_REEL
 	MEMBER_POKE_WORD (STICK_SPRITE + SPRITE_FRAME)
-
-	ld de, Sprite_Set_Oam_Buffer_2x1
-	MEMBER_POKE_WORD (STICK_SPRITE + SPRITE_METHOD_SET_OAM)
 
 	ld de, (TILE_SIZE * STICK_MASS)
 	MEMBER_POKE_WORD (STICK_SPRITE + SPRITE_TOTAL_BYTES)
