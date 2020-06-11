@@ -15,6 +15,11 @@ SECTION "Display Code", ROM0
 BGP_DEFAULT EQU %11100100
 OBP0_DEFAULT EQU %11100100
 
+Brick_Tilesheet:
+INCBIN "brick.2bpp"
+Brick_Tilesheet_End:
+BRICK_SHEET_SIZE EQU (Brick_Tilesheet_End - Brick_Tilesheet)
+
 ; Methods
 Display_Init::
 ; Setup the Display
@@ -48,8 +53,8 @@ Display_Init::
 	; Put the Display_DmaTransfer routine in to HRAM
 	MEMCPY Display_DmaTransfer, Display_DmaTransferStart, Display_DmaTransferEnd - Display_DmaTransferStart
 
-	; copy HERO_SHEET in to tiles
-	;MEMCPY _VRAM, HERO_SHEET, HERO_SHEET_SIZE
+	MEMCPY $8800, Brick_Tilesheet, BRICK_SHEET_SIZE
+	MEMSET $9800, -128, $9BFF-$9800
 
 	ret
 
