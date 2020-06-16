@@ -23,6 +23,20 @@ SECTION "Object Attribute Memory Code", ROM0
 
 WORD_SIZE EQU 2
 
+Sprite_Banks:
+	dw Sprite_Bank_0
+	dw Sprite_Bank_1
+	dw Sprite_Bank_2
+Sprite_Banks_End:
+SPRITE_BANKS_SIZE EQU Sprite_Banks_End - Sprite_Banks
+
+Sprite_Buffers:
+	dw Sprite_Buffer_0
+	dw Sprite_Buffer_1
+	dw Sprite_Buffer_2
+Sprite_Buffers_End:
+SPRITE_BUFFERS_SIZE EQU Sprite_Buffers_End - Sprite_Buffers
+
 GET_ACTIVE_BANK: MACRO
 ; Get the next Active Bank and store it in DE
 
@@ -41,20 +55,6 @@ GET_ACTIVE_BANK: MACRO
 	ld d, [hl]
 
 	ENDM
-
-Sprite_Banks:
-	dw Sprite_Bank_0
-	dw Sprite_Bank_1
-	dw Sprite_Bank_2
-Sprite_Banks_End:
-SPRITE_BANKS_SIZE EQU Sprite_Banks_End - Sprite_Banks
-
-Sprite_Buffers:
-	dw Sprite_Buffer_0
-	dw Sprite_Buffer_1
-	dw Sprite_Buffer_2
-Sprite_Buffers_End:
-SPRITE_BUFFERS_SIZE EQU Sprite_Buffers_End - Sprite_Buffers
 
 Oam_Next_Sprite_Bank::
 	; Increment the Active Bank
@@ -271,136 +271,186 @@ Sprite_UpdateBank::
 Sprite_Set_Oam_Buffer_1x1::
 ; Amend the Oam Buffer's Offset
 
-		; Preserve the Sprite Offset
-		MEMBER_PEEK_WORD (SPRITE_OFFSET)
-		push de
+	; Preserve the Sprite Offset
+	MEMBER_PEEK_WORD (SPRITE_OFFSET)
+	push de
 
-		; Put offset address of Oam Buffer in HL
-		MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
-		ld hl, (SPRITE_OFFSET)
-		add hl, de
+	; Put offset address of Oam Buffer in HL
+	MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+	ld hl, (SPRITE_OFFSET)
+	add hl, de
 
-		; Set offset of Oam Buffer
-		pop de
-		ld [hl], e
-		inc hl
-		ld [hl], d
+	; Set offset of Oam Buffer
+	pop de
+	ld [hl], e
+	inc hl
+	ld [hl], d
 
-		jp Sprite_UpdateBank
+	jp Sprite_UpdateBank
 
 Sprite_Set_Oam_Buffer_2x1::
-	; Amend the Oam Buffer's Offset
+; Amend the Oam Buffer's Offset
 
-		MEMBER_PEEK_BYTE (SPRITE_X)
+	MEMBER_PEEK_BYTE (SPRITE_X)
 
-		MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
-		ld hl, SPRITE_X
-		add hl, de
+	MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+	ld hl, SPRITE_X
+	add hl, de
 
-		; Load X into Sprite 0
-		ld [hl], a
+	; Load X into Sprite 0
+	ld [hl], a
 
-		; Load X into Sprite 1
-		ld de, OAM_OBJECT_SIZE
-		add hl, de
-		ld [hl], a
+	; Load X into Sprite 1
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
 
-		; Get Y offset
-		MEMBER_PEEK_BYTE (SPRITE_Y)
+	; Get Y offset
+	MEMBER_PEEK_BYTE (SPRITE_Y)
 
-		MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
-		ld hl, SPRITE_Y
-		add hl, de
+	MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+	ld hl, SPRITE_Y
+	add hl, de
 
-		; Load Y into Sprite 0
-		ld [hl], a
+	; Load Y into Sprite 0
+	ld [hl], a
 
-		; Load Y into Sprite 1
-		add a, 8
-		ld de, OAM_OBJECT_SIZE
-		add hl, de
-		ld [hl], a
+	; Load Y into Sprite 1
+	add a, 8
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
 
-		jp Sprite_UpdateBank
+	jp Sprite_UpdateBank
 
 Sprite_Set_Oam_Buffer_2x2::
-	; Amend the Oam Buffer's Offset
+; Amend the Oam Buffer's Offset
 
-		MEMBER_PEEK_BYTE (SPRITE_X)
+	MEMBER_PEEK_BYTE (SPRITE_X)
 
-		MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
-		ld hl, SPRITE_X
-		add hl, de
+	MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+	ld hl, SPRITE_X
+	add hl, de
 
-		; Load X into Sprite 0
-		ld [hl], a
+	; Load X into Sprite 0
+	ld [hl], a
 
-		; Load X into Sprite 1
-		ld de, OAM_OBJECT_SIZE
-		add hl, de
-		ld [hl], a
+	; Load X into Sprite 1
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
 
-		; Increment X by 8
-		add a, 8
+	; Increment X by 8
+	add a, 8
 
-		; Load X into Sprite 2
-		ld de, OAM_OBJECT_SIZE
-		add hl, de
-		ld [hl], a
+	; Load X into Sprite 2
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
 
-		; Load X into Sprite 3
-		ld de, OAM_OBJECT_SIZE
-		add hl, de
-		ld [hl], a
+	; Load X into Sprite 3
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
 
-		; Get X offset
-		MEMBER_PEEK_BYTE (SPRITE_Y)
+	; Get X offset
+	MEMBER_PEEK_BYTE (SPRITE_Y)
 
-		MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
-		ld hl, SPRITE_Y
-		add hl, de
+	MEMBER_PEEK_WORD (SPRITE_OAM_BUFFER)
+	ld hl, SPRITE_Y
+	add hl, de
 
-		; Load Y into Sprite 0
-		ld [hl], a
+	; Load Y into Sprite 0
+	ld [hl], a
 
-		; Load Y into Sprite 1
-		add a, 8
-		ld de, OAM_OBJECT_SIZE
-		add hl, de
-		ld [hl], a
+	; Load Y into Sprite 1
+	add a, 8
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
 
-		; Load Y into Sprite 2
-		sub a, 8
-		ld de, OAM_OBJECT_SIZE
-		add hl, de
-		ld [hl], a
+	; Load Y into Sprite 2
+	sub a, 8
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
 
-		; Load Y into Sprite 3
-		add a, 8
-		ld de, OAM_OBJECT_SIZE
-		add hl, de
-		ld [hl], a
+	; Load Y into Sprite 3
+	add a, 8
+	ld de, OAM_OBJECT_SIZE
+	add hl, de
+	ld [hl], a
 
-		jp Sprite_UpdateBank
+	jp Sprite_UpdateBank
 
-Oam_Blit_Setup::
-; Puts the VRAM bank and buffers in the correct registers for Oam_Blit_Tiles
+PREBLIT: MACRO
+; Puts the VRAM bank and buffers in the correct registers
 ; hl <~ Active Source
 ; de <~ Active Dest
 
-	; Get the Active Source and preserve
-	GET_ACTIVE_BANK Sprite_Buffers
+	; Get Sprite Buffer address and preserve it
+	ld de, \1
 	ld hl, SPRITE_BUFFER_DATA
 	add hl, de
 	push hl
 
-	; Get the Active Destination and leave in DE
-	GET_ACTIVE_BANK Sprite_Banks
+	; Get Sprite Bank address and store in DE
+	ld de, \2
 
-	; Put Active Source in HL
+	; Refresh Sprite Buffer
 	pop hl
 
+	jp Sprite_Blit
+
+	ENDM
+
+Sprite_PreBlit_Bank0:
+; hl <~ Active Source
+; de <~ Active Dest
+
+	PREBLIT Sprite_Buffer_0, Sprite_Bank_0
+
+Sprite_PreBlit_Bank1:
+; hl <~ Active Source
+; de <~ Active Dest
+
+	PREBLIT Sprite_Buffer_1, Sprite_Bank_1
+
+Sprite_PreBlit_Bank2:
+; hl <~ Active Source
+; de <~ Active Dest
+
+	PREBLIT Sprite_Buffer_2, Sprite_Bank_2
+
+Sprite_PreBlits_Order:
+	dw Sprite_PreBlit_Bank0
+	dw Sprite_PreBlit_Bank1
+	dw Sprite_PreBlit_Bank2
+Sprite_PreBlits_Order_End:
+SPRITE_PREBLITS_ORDER_SIZE EQU Sprite_PreBlits_Order_End - Sprite_PreBlits_Order
+
+Sprite_PreBlit::
+	; Get the current Active bank offset
+	ld d, 0
+	ld hl, Active_Sprite_Bank
+	ld e, [hl]
+
+	; Get the PreBlit method
+	ld hl, Sprite_PreBlits_Order
+	add hl, de
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+
+	; call PreBlit
+	ld h, d
+	ld l, e
+	jp hl
+
+Sprite_Blit::
+
 	ret
+
 
 Oam_Blit_Tiles::
 ; hl ~> Active Source

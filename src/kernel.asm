@@ -115,7 +115,7 @@ Kernel_Main::
 	PIPELINE_METHOD SIGNAL_UPDATE
 	PIPELINE_METHOD SIGNAL_ANIMATE
 
-	call Oam_Blit_Setup
+	call Sprite_PreBlit
 
 	; and around we go again...
 	jr .halt
